@@ -1391,49 +1391,61 @@ export function enrichDataForDocxtemplater(data: any) {
 const TEMPLATE_NAMES = ["cp", "tp", "atp", "prota", "promes", "kktp", "alokasi", "all"];
 
 export async function ensureDefaultTemplates(): Promise<void> {
-  const templatesDir = path.join(process.cwd(), "server", "templates");
-  if (!fs.existsSync(templatesDir)) {
-    fs.mkdirSync(templatesDir, { recursive: true });
-  }
+  try {
+    const templatesDir = path.join(process.cwd(), "server", "templates");
+    if (!fs.existsSync(templatesDir)) {
+      try {
+        fs.mkdirSync(templatesDir, { recursive: true });
+      } catch (err) {
+        console.warn("Could not create templates directory on disk (expected in read-only environments):", err);
+      }
+    }
 
-  for (const name of TEMPLATE_NAMES) {
-    const templatePath = path.join(templatesDir, `${name}.docx`);
-    // Overwrite the files with our brand-new high-fidelity premium designs
-    console.log(`Generating premium template for ${name}...`);
-    let doc: Document;
-    if (name === "cp") doc = buildCpTemplate();
-    else if (name === "tp") doc = buildTpTemplate();
-    else if (name === "atp") doc = buildAtpTemplate();
-    else if (name === "prota") doc = buildProtaTemplate();
-    else if (name === "promes") doc = buildPromesTemplate();
-    else if (name === "kktp") doc = buildKktpTemplate();
-    else if (name === "alokasi") doc = buildAlokasiTemplate();
-    else doc = buildAllTemplate();
+    for (const name of TEMPLATE_NAMES) {
+      const templatePath = path.join(templatesDir, `${name}.docx`);
+      try {
+        let doc: Document;
+        if (name === "cp") doc = buildCpTemplate();
+        else if (name === "tp") doc = buildTpTemplate();
+        else if (name === "atp") doc = buildAtpTemplate();
+        else if (name === "prota") doc = buildProtaTemplate();
+        else if (name === "promes") doc = buildPromesTemplate();
+        else if (name === "kktp") doc = buildKktpTemplate();
+        else if (name === "alokasi") doc = buildAlokasiTemplate();
+        else doc = buildAllTemplate();
 
-    const docBuffer = await Packer.toBuffer(doc);
-    fs.writeFileSync(templatePath, docBuffer);
+        const docBuffer = await Packer.toBuffer(doc);
+        fs.writeFileSync(templatePath, docBuffer);
+      } catch (err) {
+        // Safe to ignore or warn on read-only environments
+        console.warn(`Could not write template ${name}.docx to disk:`, err);
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to ensure default templates on disk:", error);
   }
 }
 
 /**
- * Loads a word template from `server/templates/${templateName}.docx` 
- * and fills placeholders using docxtemplater and the SesiKurikulum dataset.
+ * Loads a word template and fills placeholders using docxtemplater and the SesiKurikulum dataset.
+ * Runs 100% in-memory for lightning-fast performance and compatibility with read-only filesystems (e.g., Vercel, AWS Lambda).
  */
 export async function generateDocx(templateName: string, data: any): Promise<Buffer> {
-  // Ensure default templates exist
-  await ensureDefaultTemplates();
+  // Generate the baseline document directly in-memory
+  let doc: Document;
+  if (templateName === "cp") doc = buildCpTemplate();
+  else if (templateName === "tp") doc = buildTpTemplate();
+  else if (templateName === "atp") doc = buildAtpTemplate();
+  else if (templateName === "prota") doc = buildProtaTemplate();
+  else if (templateName === "promes") doc = buildPromesTemplate();
+  else if (templateName === "kktp") doc = buildKktpTemplate();
+  else if (templateName === "alokasi") doc = buildAlokasiTemplate();
+  else doc = buildAllTemplate();
 
-  const templatesDir = path.join(process.cwd(), "server", "templates");
-  const templatePath = path.join(templatesDir, `${templateName}.docx`);
-
-  if (!fs.existsSync(templatePath)) {
-    throw new Error(`Template file ${templateName}.docx not found.`);
-  }
-
-  const content = fs.readFileSync(templatePath, "binary");
-  const zip = new PizZip(content);
+  const docBuffer = await Packer.toBuffer(doc);
+  const zip = new PizZip(docBuffer);
   
-  const doc = new Docxtemplater(zip, {
+  const docx = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
   });
@@ -1441,9 +1453,9 @@ export async function generateDocx(templateName: string, data: any): Promise<Buf
   // Enrich the raw data object with computed values, indices, and duplicates for safe templating 
   const enriched = enrichDataForDocxtemplater(data);
 
-  doc.render(enriched);
+  docx.render(enriched);
 
-  const buf = doc.getZip().generate({
+  const buf = docx.getZip().generate({
     type: "nodebuffer",
     compression: "DEFLATE",
   });
