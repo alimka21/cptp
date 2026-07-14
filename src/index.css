@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Roboto+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Corporate Modern: Technical Precision Ledger Colors */
+  --color-brand-bg: #f7f9fb;
+  --color-brand-surface: #ffffff;
+  --color-brand-surface-dim: #d8dadc;
+  --color-brand-surface-bright: #f7f9fb;
+  --color-brand-low: #f2f4f6;
+  --color-brand-container: #eceef0;
+  --color-brand-high: #e6e8ea;
+  --color-brand-highest: #e0e3e5;
+
+  /* Core UI color mappings */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #0058be;
+  --color-blue-700: #1d4ed8;
+
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error: #ba1a1a;
+
+  /* Standard curves */
+  --radius-sm: 0.125rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* Base style overrides to establish "competent calm" paper-like background */
+@layer base {
+  body {
+    background-color: #f7f9fb !important;
+    color: #191c1e !important;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  /* Make sure standard headings pair nicely */
+  h1, h2, h3, h4, h5, h6 {
+    color: #0f172a;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    tracking: -0.01em;
+  }
+
+  /* Exclusively use Source Serif 4 for static/reports/documents text */
+  .ledger-document-body {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: #1e293b;
+  }
+
+  .ledger-document-heading {
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #0f172a;
+  }
+
+  /* Monospace mapping for codes, schedules, and numerical columns */
+  .ledger-mono-data {
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Animations and decorative touches */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom shadow level 2 */
+.shadow-level-2 {
+  box-shadow: 0px 4px 12px rgba(15, 23, 42, 0.08);
+}
+
