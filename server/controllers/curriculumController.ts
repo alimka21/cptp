@@ -1,6 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import * as fs from "fs";
 import * as path from "path";
+
+export function getBaseDir() {
+  const cwdPath = path.join(process.cwd(), "capaian_pembelajaran");
+  if (fs.existsSync(cwdPath)) {
+    return cwdPath;
+  }
+  const dirnamePath = path.join(__dirname, "../../capaian_pembelajaran");
+  if (fs.existsSync(dirnamePath)) {
+    return dirnamePath;
+  }
+  const dirnameOnePath = path.join(__dirname, "../capaian_pembelajaran");
+  if (fs.existsSync(dirnameOnePath)) {
+    return dirnameOnePath;
+  }
+  return cwdPath;
+}
+
 import { Type } from "@google/genai";
 import { ai, checkApiKey, generateTujuanPembelajaran } from "../config/aiService";
 import { trackRequest } from "../utils/statsStore";
@@ -111,7 +128,7 @@ export async function getCPData(req: Request, res: Response, next: NextFunction)
     }
 
     // Determine target directory and filename
-    const baseDir = path.join(process.cwd(), "capaian_pembelajaran");
+    const baseDir = getBaseDir();
     const parsedPhase = phase.toUpperCase().trim();
     const isPaud = jenjang === "PAUD" || parsedPhase === "FONDASI" || subject.toLowerCase().includes("paud");
     
@@ -414,7 +431,7 @@ export async function getSubjectsForPhase(req: Request, res: Response, next: Nex
       return res.status(400).json({ error: "Fase (phase) wajib disertakan." });
     }
 
-    const baseDir = path.join(process.cwd(), "capaian_pembelajaran");
+    const baseDir = getBaseDir();
     const parsedPhase = phase.toUpperCase().trim();
     const isPaud = jenjang === "PAUD" || parsedPhase === "FONDASI" || parsedPhase === "PAUD";
 
