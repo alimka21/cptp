@@ -159,13 +159,9 @@ export async function exportDocx(req: Request, res: Response, next: NextFunction
 
     const sanitizedFileName = `administrasi_${tab}_${identity.subject.replace(/\s+/g, "_")}_fase_${identity.phase}.docx`.toLowerCase();
 
-    res.set({
-      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "Content-Disposition": `attachment; filename=${encodeURIComponent(sanitizedFileName)}`,
-      "Content-Length": docBuffer.length,
-    });
-
-    res.send(docBuffer);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(sanitizedFileName)}"`);
+    res.end(docBuffer);
   } catch (error: any) {
     next(error);
   }
