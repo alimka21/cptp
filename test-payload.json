@@ -1,0 +1,8 @@
+{
+  "babs": [{"id": "tp-gemini-1784203766560-0", "code": "INF.D.7.BK.01"}],
+  "elements": [{"name": "Berpikir Komputasional"}, {"name": "Literasi Digital"}],
+  "identity": {"sekolah": "dff", "npsn": "", "guru": "sds", "nip": "d3232", "kepalaSekolah": "fddfd", "nipKepalaSekolah": "232", "subject": "test", "phase": "A", "grades": ["7"]},
+  "promesSelections": {},
+  "tab": "all",
+  "tps": [{"id": "tp-gemini-1784203766560-0", "code": "INF.D.7.BK.01", "element": "Berpikir Komputasional"}]
+}

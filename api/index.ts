@@ -1,9 +1,12 @@
 import app from "../server";
 
+process.on('uncaughtException', (err) => {
+  console.error("Uncaught Exception:", err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+
 export default function handler(req, res) {
-  try {
-    return app(req, res);
-  } catch (e) {
-    res.status(500).json({ error: e.message, stack: e.stack, name: e.name });
-  }
+  return app(req, res);
 }

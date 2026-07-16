@@ -405,7 +405,8 @@ function AppContent() {
       });
 
       if (!response.ok) {
-        throw new Error("Gagal mengunduh dokumen. Pastikan server dev aktif.");
+        const errText = await response.text();
+        throw new Error(`Gagal mengunduh dokumen (Error ${response.status}): ${errText}`);
       }
 
       const blob = await response.blob();

@@ -652,7 +652,8 @@ export function TpStep({ onNext, onPrev }: TpStepProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Gagal memformulasikan TP. Pastikan server aktif.");
+        const errText = await response.text();
+        throw new Error(`Gagal mengunduh dokumen (Error ${response.status}): ${errText}`);
       }
 
       const data = await response.json();
