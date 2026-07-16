@@ -55,7 +55,12 @@ async function getFileContent(req: Request, folder: string, fileName: string): P
       console.log(`Vercel CDN Fallback: Fetching from ${url}`);
       const res = await fetch(url);
       if (res.ok) {
-        return await res.text();
+        const text = await res.text();
+        if (text.trim().toLowerCase().startsWith("<!doctype") || text.trim().toLowerCase().startsWith("<html")) {
+          console.warn(`Fetch returned HTML instead of markdown for ${url}`);
+        } else {
+          return text;
+        }
       } else {
         console.warn(`Fetch returned status ${res.status} for ${url}`);
       }
