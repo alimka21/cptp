@@ -310,24 +310,50 @@ export const getPresetElements = (subject: string, phase: string): CurriculumEle
   }
 
   if (subject === "Informatika") {
-    return [
-      {
-        name: "Berpikir Komputasional",
-        cpText: "Menerapkan dekomposisi, abstraksi, pengenalan pola, dan perancangan algoritma untuk pemecahan masalah kompleks secara sistematis, logis, dan kreatif."
-      },
-      {
-        name: "Literasi Digital",
-        cpText: "Kecakapan menggunakan media digital secara aman, beretika, produktif, serta berbudaya Pancasila; melestarikan warisan nasional melalui ruang digital."
-      },
-      {
-        name: "Analisis Data",
-        cpText: "Menstrukturkan, mengolah, menganalisis, menyimpulkan, dan menyajikan data kuantitatif dalam format tabel, grafik, maupun diagram."
-      },
-      {
-        name: "Algoritma dan Pemrograman",
-        cpText: "Menulis dan membaca teks algoritma terstruktur (perulangan, percabangan) ke dalam bentuk kode program terstruktur secara kolaboratif."
-      }
-    ];
+    const parsedPhase = phase.toUpperCase().trim();
+    if (parsedPhase === "F") {
+      return [
+        {
+          name: "Berpikir Komputasional",
+          cpText: "Memahami alur proses pengembangan program atau produk teknologi digital; menganalisis persoalan yang bisa menghasilkan lebih dari satu solusi dengan pemahamannya terhadap beberapa strategi algoritmik untuk menghasilkan beberapa alternatif solusi dari satu persoalan dengan memberikan justifikasi efisiensi, kelebihan, dan keterbatasan dari setiap alternatif solusi; mampu memilih dan menerapkan solusi terbaik, paling efisien, dan optimal dengan merancang struktur data yang lebih kompleks dan abstrak; serta mengenali berbagai model jaringan komputer serta mampu melakukan pengiriman data antar perangkat dalam jaringan komputer dan troubleshooting permasalahan jaringan komputer."
+        },
+        {
+          name: "Literasi Digital",
+          cpText: "Memahami penggunaan mesin pencari untuk melakukan riset; mengevaluasi kebenaran konten menggunakan verifikasi teks, gambar, dan video; menggunakan cara membaca lateral untuk mengevaluasi informasi digital yang kompleks; merancang kebutuhan sistem komputer sesuai kebutuhan pengguna; memahami konsep dan penerapan serta konfigurasi keamanan lanjut untuk konektivitas jaringan data lokal dan internet baik kabel maupun nirkabel; mengkreasi konten digital dengan peralatan dan metode yang bervariasi; memahami hukum dan perundang-undangan terkait isu digital di Indonesia; memahami pemanfaatan teknologi digital dalam demokrasi; menerapkan pengelolaan kata sandi dengan manajer kata sandi dan autentikasi dua langkah dengan beragam moda; serta memahami pemanfaatan platform loka pasar, perbankan digital, dompet digital beserta aspek keamanannya."
+        },
+        {
+          name: "Analisis Data",
+          cpText: "Memanfaatkan sumber data yang terbuka, terpercaya, dan legal untuk mengolah data untuk pengambilan keputusan dan prediksi secara efektif, efisien, dan optimal tanpa atau dengan komputer."
+        },
+        {
+          name: "Algoritma dan Pemrograman",
+          cpText: "Memahami konsep strategi algoritmik; mengembangkan program komputer terstruktur dalam notasi algoritma atau notasi lain berdasarkan strategi algoritmik yang tepat; mengembangkan, melakukan pemeliharaan, dan penyempurnaan algoritma standar ke dalam kode sumber program dengan memperhatikan kualitasnya; merancang dan mengimplementasikan sebuah program yang menggunakan struktur data kompleks dan tepat menggunakan library atau perangkat yang tersedia."
+        }
+      ];
+    } else if (parsedPhase === "E") {
+      return [
+        {
+          name: "Berpikir Komputasional",
+          cpText: "Memahami konsep struktur data dan algoritma standar; menerapkan proses komputasi yang dilakukan manusia secara mandiri atau berkelompok untuk mendapatkan data yang berkualitas; menerapkan algoritma dan struktur data standar untuk menghasilkan berbagai solusi dalam menyelesaikan persoalan; menuliskan solusi rancangan program sederhana dalam format pseudocode yang dekat dengan bahasa komputer; memahami model dan menyimulasikan dinamika Input-Process-Output dalam sebuah komputer Von Neumann, serta memahami peran sistem operasi."
+        },
+        {
+          name: "Literasi Digital",
+          cpText: "Memahami penggunaan mesin pencari dengan variabel yang lebih banyak; mengetahui ekosistem periksa fakta untuk memilah fakta dan bukan; menggunakan cara membaca lateral untuk mengevaluasi berbagai informasi digital; memahami pemanfaatan perangkat teknologi yang lebih beragam untuk pengolah dokumen, lembar kerja, dan presentasi; memahami konsep dan penerapan serta konfigurasi keamanan dasar untuk konektivitas jaringan data lokal dan internet baik kabel maupun nirkabel; memahami pemanfaatan media digital untuk produksi dan diseminasi konten, partisipasi dan kolaborasi; menghargai hak atas kekayaan intelektual, mengenal profesi bidang Informatika, memahami penerapan digitalisasi budaya Indonesia, menyaring konten negatif di dunia digital; menerapkan pengelolaan kata sandi dengan manajer kata sandi, dan menerapkan autentikasi dua langkah secara sederhana, serta menerapkan konfigurasi privasi dan keamanan pada akun platform digital."
+        }
+      ];
+    } else {
+      // Default / Fase D (SMP)
+      return [
+        {
+          name: "Berpikir Komputasional",
+          cpText: "Menerapkan berpikir komputasional untuk problem dalam kehidupan sehari-hari maupun dalam menghadapi masalah komputasi; memahami konsep himpunan data terstruktur dalam kehidupan sehari-hari; memahami konsep lembar kerja pengolah data; menerapkan berpikir komputasional dalam menyelesaikan persoalan yang mengandung himpunan data berstruktur sederhana dengan volume kecil; serta menuliskan sekumpulan instruksi dengan menggunakan sekumpulan kosakata terbatas atau simbol dalam format pseudocode."
+        },
+        {
+          name: "Literasi Digital",
+          cpText: "Memahami cara kerja dan penggunaan mesin pencari di internet; mengetahui kualitas informasi dan kredibilitas sumber informasi digital; mengenal ekosistem media pers digital; membedakan fakta, opini, dan hoaks; memahami pemanfaatan perangkat teknologi pengolah dokumen, lembar kerja, dan presentasi; mampu mendeskripsikan komponen, fungsi, dan cara kerja komputer; memahami konsep dan penerapan konektivitas jaringan lokal dan internet baik kabel maupun nirkabel; mengetahui jenis ruang publik virtual; memahami pemanfaatan perangkat teknologi digital untuk produksi dan diseminasi konten; memahami pentingnya menjaga rekam jejak digital, mengamalkan toleransi dan empati di dunia digital, memahami dampak perundungan digital, membuat kata sandi yang aman; memahami pengamanan perangkat dari berbagai jenis malware, memilah informasi yang bersifat privat dan publik, melindungi data pribadi dan identitas digital serta memiliki kesadaran penuh (mindfulness) dalam dunia digital."
+        }
+      ];
+    }
   }
 
   // default / custom fallback

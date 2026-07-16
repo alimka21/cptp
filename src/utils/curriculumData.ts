@@ -113,13 +113,13 @@ export function getLocalCP(subject: string, phase: string, jenjang: string): Arr
 
     if (line.startsWith("# Capaian Pembelajaran:")) {
       const headerText = line.substring("# Capaian Pembelajaran:".length).toLowerCase();
-      const mainSubjectPart = headerText.split("—")[0].trim();
+      const mainSubjectPart = headerText.split(/[\u2014\u2013-]/)[0].trim();
       
       let isMatch = false;
       const subjText = mainSubjectPart.replace(/[^a-z0-9]/gi, "");
       const searchSubjText = cleanSubject.replace(/[^a-z0-9]/gi, "");
 
-      if (subjText.includes(searchSubjText) || searchSubjText.includes(subjText)) {
+      if (subjText === searchSubjText || subjText.includes(searchSubjText) || searchSubjText.includes(subjText)) {
         isMatch = true;
       } else {
         for (const [key, keywords] of Object.entries(aliases)) {
