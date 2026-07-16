@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { SchoolIdentity, LearningObjective } from "../types";
-import AnalyticsWidget from "./AnalyticsWidget";
+import ProdukView from "./ProdukView";
 
 interface DashboardViewProps {
   identity: SchoolIdentity;
@@ -77,8 +77,10 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Analytics Widget Section */}
-      <AnalyticsWidget />
+      {/* Produk Unggulan Section */}
+      <div className="pt-4 border-t border-slate-100">
+        <ProdukView />
+      </div>
 
 
     </main>

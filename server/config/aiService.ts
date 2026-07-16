@@ -35,6 +35,7 @@ export const FASE_KELAS_MAP: Record<string, number[]> = {
 async function generateContentWithRetryAndFallback(params: {
   contents: string;
   config: any;
+  client: GoogleGenAI;
 }): Promise<any> {
   const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
   let lastError: any = null;
@@ -46,7 +47,7 @@ async function generateContentWithRetryAndFallback(params: {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[Gemini API] Requesting ${modelName} (Attempt ${attempt}/${maxRetries})...`);
-        const response = await ai.models.generateContent({
+        const response = await params.client.models.generateContent({
           model: modelName,
           contents: params.contents,
           config: params.config,
@@ -97,9 +98,19 @@ export async function generateTujuanPembelajaran(
   phase: string,
   elements: Array<{ name: string; cpText: string }>,
   identity: any,
-  mapelAbbr: string
+  mapelAbbr: string,
+  customApiKey?: string
 ): Promise<TujuanPembelajaran[]> {
   const parsedPhase = phase.toUpperCase().trim();
+  const apiKeyToUse = customApiKey || process.env.GEMINI_API_KEY || "";
+  const client = new GoogleGenAI({
+    apiKey: apiKeyToUse,
+    httpOptions: {
+      headers: {
+        "User-Agent": "aistudio-build",
+      },
+    },
+  });
   
   // Use user-selected grades as the primary target, fallback to all grades in Phase if empty
   let kelasList: string[] = [];
@@ -222,6 +233,7 @@ Harap rumuskan Tujuan Pembelajaran (TP) yang terperinci secara profesional berda
 
   const response = await generateContentWithRetryAndFallback({
     contents: userPrompt,
+    client,
     config: {
       systemInstruction: systemPrompt,
       responseMimeType: "application/json",

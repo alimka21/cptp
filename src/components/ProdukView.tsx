@@ -3,7 +3,7 @@ import { BookOpen, Compass, ClipboardCheck, ExternalLink, ShoppingBag, Award } f
 
 export default function ProdukView() {
   return (
-    <main className="p-8 max-w-5xl w-full mx-auto space-y-8 animate-fade-in-up" id="produk-view">
+    <div className="space-y-6 animate-fade-in-up" id="produk-view">
       <div className="space-y-2 border-l-4 border-blue-600 pl-4 py-1">
         <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
           Produk Unggulan Guru Hebat (by alimkadigital)
@@ -156,6 +156,6 @@ export default function ProdukView() {
         </div>
       </div>
       
-    </main>
+    </div>
   );
 }

@@ -139,7 +139,7 @@ export default function Sidebar({
       cancelButtonColor: "#64748b"
     }).then((result) => {
       if (result.isConfirmed) {
-        setActiveView("produk");
+        setActiveView("dashboard");
       }
     });
   };
@@ -186,21 +186,6 @@ export default function Sidebar({
         >
           <LayoutDashboard className={`w-4 h-4 ${activeView === "dashboard" ? "text-[#0058be]" : "text-slate-400"}`} />
           <span className="text-xs font-semibold uppercase tracking-wider font-mono">Beranda Utama</span>
-        </button>
-
-        {/* Produk Unggulan View */}
-        <button
-          onClick={() => setActiveView("produk")}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition duration-150 outline-none text-left ${
-            activeView === "produk"
-              ? "bg-blue-50 text-[#0058be] font-bold border-l-4 border-[#0058be] pl-2"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent"
-          }`}
-          id="sidebar-btn-produk"
-          title="Produk Unggulan Guru Hebat"
-        >
-          <User className={`w-4 h-4 ${activeView === "produk" ? "text-[#0058be]" : "text-slate-400"}`} />
-          <span className="text-xs font-semibold uppercase tracking-wider font-mono">Produk Unggulan</span>
         </button>
 
         {/* API Key Settings View */}

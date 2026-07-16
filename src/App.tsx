@@ -447,7 +447,7 @@ function AppContent() {
     try {
       let dataTps: any[] = [];
 
-      if (isServerOnline) {
+      if (isServerOnline || (isServerOnline !== false && localKey)) {
         // Mode 1: Server-side proxy (Highly secure, hides key)
         const response = await fetch("/api/curriculum/analyze-cp", {
           method: "POST",
@@ -456,7 +456,8 @@ function AppContent() {
             subject: identity.subject,
             phase: identity.phase,
             elements,
-            identity
+            identity,
+            customApiKey: localKey
           })
         });
 
@@ -665,10 +666,6 @@ function AppContent() {
                 handleGenerateAllDocuments={handleGenerateAllDocuments}
                 tps={tps}
               />
-            )}
-
-            {activeView === "produk" && (
-              <ProdukView />
             )}
 
             {activeView === "workspace" && (

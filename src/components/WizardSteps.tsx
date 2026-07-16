@@ -640,6 +640,7 @@ export function TpStep({ onNext, onPrev }: TpStepProps) {
     }, 1500);
 
     try {
+      const localKey = localStorage.getItem("client_gemini_api_key") || "";
       const response = await fetch("/api/curriculum/analyze-cp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -647,7 +648,8 @@ export function TpStep({ onNext, onPrev }: TpStepProps) {
           subject: identity.subject,
           phase: identity.phase,
           elements,
-          identity
+          identity,
+          customApiKey: localKey
         })
       });
 

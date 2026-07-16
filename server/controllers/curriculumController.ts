@@ -102,14 +102,15 @@ import {
 export async function analyzeCp(req: Request, res: Response, next: NextFunction) {
   try {
     trackRequest("analysis");
-    const { subject, phase, elements, identity } = req.body;
+    const { subject, phase, elements, identity, customApiKey } = req.body;
 
     if (!elements || !Array.isArray(elements) || elements.length === 0) {
       return res.status(400).json({ error: "Elemen CP wajib dicantumkan dalam bentuk array." });
     }
 
-    if (!checkApiKey()) {
-      return res.status(500).json({
+    const apiKeyToUse = customApiKey || process.env.GEMINI_API_KEY || "";
+    if (!apiKeyToUse) {
+      return res.status(400).json({
         error: "GEMINI_API_KEY tidak terpasang. Tolong tambahkan kunci API Anda di menu Pengaturan.",
       });
     }
@@ -128,7 +129,7 @@ export async function analyzeCp(req: Request, res: Response, next: NextFunction)
     };
     const mapelAbbr = subjectAbbrMap[subject] || subject.substring(0, 3).toUpperCase();
 
-    const tpsList = await generateTujuanPembelajaran(subject, phase, elements, identity, mapelAbbr);
+    const tpsList = await generateTujuanPembelajaran(subject, phase, elements, identity, mapelAbbr, apiKeyToUse);
 
     res.json({ success: true, tps: tpsList });
   } catch (error: any) {
