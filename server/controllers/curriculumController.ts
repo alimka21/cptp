@@ -52,6 +52,38 @@ export function getBaseDir() {
   return path.join(process.cwd(), "public/capaian_pembelajaran");
 }
 
+async function getFileContent(req: Request, folder: string, fileName: string): Promise<string> {
+  const baseDir = getBaseDir();
+  const filePath = path.join(baseDir, folder, fileName);
+  try {
+    if (fs.existsSync(filePath)) {
+      return await fs.promises.readFile(filePath, "utf-8");
+    }
+  } catch (err) {
+    console.warn(`Local file read failed for ${filePath}:`, err);
+  }
+
+  // Fallback to fetch from the request's host (handles Vercel serverless CDN storage gracefully)
+  try {
+    const protocol = req.headers["x-forwarded-proto"] || (req.secure ? "https" : "http");
+    const host = req.headers.host;
+    if (host) {
+      const url = `${protocol}://${host}/capaian_pembelajaran/${folder}/${fileName}`;
+      console.log(`Vercel CDN Fallback: Fetching from ${url}`);
+      const res = await fetch(url);
+      if (res.ok) {
+        return await res.text();
+      } else {
+        console.warn(`Fetch returned status ${res.status} for ${url}`);
+      }
+    }
+  } catch (err) {
+    console.warn(`Fetch fallback failed:`, err);
+  }
+
+  throw new Error(`File ${folder}/${fileName} could not be loaded.`);
+}
+
 import { Type } from "@google/genai";
 import { ai, checkApiKey, generateTujuanPembelajaran } from "../config/aiService";
 import { trackRequest } from "../utils/statsStore";
@@ -175,18 +207,17 @@ export async function getCPData(req: Request, res: Response, next: NextFunction)
 
     try {
       // 1. Try reading the single subject file first
-      content = await fs.promises.readFile(targetFilePath, "utf-8");
+      content = await getFileContent(req, folder, fileName);
     } catch {
       // 2. Fallback to the unified file if the single file is not found
       isSingleFile = false;
       const fallbackFileName = isPaud ? "Fase_Fondasi_PAUD.md" : `Fase_${parsedPhase}.md`;
-      const fallbackPath = path.join(baseDir, folder, fallbackFileName);
       try {
-        content = await fs.promises.readFile(fallbackPath, "utf-8");
+        content = await getFileContent(req, folder, fallbackFileName);
       } catch (err) {
         return res.status(404).json({
-          error: `File Capaian Pembelajaran untuk Fase ${phase} tidak ditemukan. (Tried: ${targetFilePath} and ${fallbackPath})`,
-          path: targetFilePath,
+          error: `File Capaian Pembelajaran untuk Fase ${phase} tidak ditemukan. (Tried CDN & local path)`,
+          path: fileName,
         });
       }
     }
@@ -497,10 +528,9 @@ export async function getSubjectsForPhase(req: Request, res: Response, next: Nex
 
     // 2. Read compiled / unified file if it exists, or look for standard unified files
     const unifiedFileName = isPaud ? "Fase_Fondasi_PAUD.md" : `Fase_${parsedPhase}.md`;
-    const targetFilePath = path.join(targetFolder, unifiedFileName);
 
     try {
-      const content = await fs.promises.readFile(targetFilePath, "utf-8");
+      const content = await getFileContent(req, folder, unifiedFileName);
       const lines = content.split(/\r?\n/);
       for (const line of lines) {
         const trimmed = line.trim();
@@ -526,9 +556,8 @@ export async function getSubjectsForPhase(req: Request, res: Response, next: Nex
     } catch {
       // If unified file doesn't exist either, check PAUD.md for PAUD fallback
       if (isPaud) {
-        const fallbackPaudPath = path.join(targetFolder, "PAUD.md");
         try {
-          const content = await fs.promises.readFile(fallbackPaudPath, "utf-8");
+          const content = await getFileContent(req, folder, "PAUD.md");
           const lines = content.split(/\r?\n/);
           for (const line of lines) {
             const trimmed = line.trim();
