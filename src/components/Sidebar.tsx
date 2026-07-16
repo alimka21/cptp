@@ -168,6 +168,15 @@ export default function Sidebar({
         <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-tight mt-1">
           Administrasi Kurikulum Nasional
         </p>
+        <a
+          href="https://www.instagram.com/muh.alimka/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 font-medium transition-colors"
+          id="sidebar-brand-by-alimka"
+        >
+          by Alimka Digital
+        </a>
       </div>
 
       {/* Main Navigation Controls */}
