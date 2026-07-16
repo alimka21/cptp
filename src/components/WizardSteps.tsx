@@ -1291,11 +1291,18 @@ export function TableStep({ onPrev, onResetAll }: TableStepProps) {
       const response = await fetch("/api/curriculum/export-docx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identity, tps }),
+        body: JSON.stringify({
+          identity: state.identitas,
+          tps: state.tp,
+          babs: state.bab,
+          elements: state.cp?.elemen || [],
+          tab: "all"
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Gagal mengunduh file DOCX.");
+        const errText = await response.text();
+        throw new Error(`Gagal mengunduh dokumen (Error ${response.status}): ${errText}`);
       }
 
       // Stream the response back to user

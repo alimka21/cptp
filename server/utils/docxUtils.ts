@@ -1503,6 +1503,9 @@ export async function generateDocx(templateName: string, data: any): Promise<Buf
   const docx = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
+    nullGetter() {
+      return "";
+    }
   });
 
   // Enrich the raw data object with computed values, indices, and duplicates for safe templating 
