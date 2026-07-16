@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { SchoolIdentity, CurriculumElement, LearningObjective } from "../types";
 import { subjectOptions, getPresetElements } from "../data/curriculumData";
+import { getLocalSubjects } from "../utils/curriculumData";
 import { useSesiKurikulum } from "../context/SesiKurikulumContext";
 import { getCalculatedIntrakurikulerJP } from "../data/intrakurikulerJP";
 
@@ -44,32 +45,29 @@ export function OnboardingStep({ onNext, onSubjectChange }: OnboardingProps) {
   React.useEffect(() => {
     if (identity.jenjang && identity.phase) {
       setLoadingSubjects(true);
-      fetch("/api/curriculum/get-subjects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phase: identity.phase, jenjang: identity.jenjang })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.subjects) && data.subjects.length > 0) {
-            setFetchedSubjects(data.subjects);
-            
-            // Sync selected subject if not present in the loaded list
-            const matched = data.subjects.find((s: string) => s.toLowerCase() === identity.subject?.toLowerCase());
-            if (matched) {
-              if (matched !== identity.subject) {
-                updateIdentitas({ subject: matched });
-                if (onSubjectChange) onSubjectChange(matched, identity.phase);
-              }
-            } else {
-              const firstSubj = data.subjects[0];
-              updateIdentitas({ subject: firstSubj });
-              if (onSubjectChange) onSubjectChange(firstSubj, identity.phase);
+      try {
+        const subjects = getLocalSubjects(identity.phase, identity.jenjang);
+        if (subjects && subjects.length > 0) {
+          setFetchedSubjects(subjects);
+          
+          // Sync selected subject if not present in the loaded list
+          const matched = subjects.find((s: string) => s.toLowerCase() === identity.subject?.toLowerCase());
+          if (matched) {
+            if (matched !== identity.subject) {
+              updateIdentitas({ subject: matched });
+              if (onSubjectChange) onSubjectChange(matched, identity.phase);
             }
+          } else {
+            const firstSubj = subjects[0];
+            updateIdentitas({ subject: firstSubj });
+            if (onSubjectChange) onSubjectChange(firstSubj, identity.phase);
           }
-        })
-        .catch(err => console.error("Error loading onboarding subjects:", err))
-        .finally(() => setLoadingSubjects(false));
+        }
+      } catch (err) {
+        console.error("Error loading onboarding subjects locally:", err);
+      } finally {
+        setLoadingSubjects(false);
+      }
     } else {
       setFetchedSubjects([]);
     }

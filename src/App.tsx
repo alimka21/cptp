@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { SchoolIdentity, CurriculumElement, LearningObjective, BabMateri } from "./types";
 import { getPresetElements, getPresetBabs } from "./data/curriculumData";
+import { getLocalCP } from "./utils/curriculumData";
 import { getCalculatedIntrakurikulerJP, getValidJpForTp } from "./data/intrakurikulerJP";
 import Swal from "sweetalert2";
 
@@ -141,20 +142,13 @@ function AppContent() {
 
   const fetchCpDataForSubject = async (subj: string, phs: string, jnj: string) => {
     try {
-      const response = await fetch("/api/curriculum/get-cp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subj, phase: phs, jenjang: jnj })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.elements) && data.elements.length > 0) {
-          setElements(data.elements);
-          return;
-        }
+      const elements = getLocalCP(subj, phs, jnj);
+      if (elements && elements.length > 0) {
+        setElements(elements);
+        return;
       }
     } catch (err) {
-      console.warn("Gagal mengambil CP dari folder, menggunakan preset lokal:", err);
+      console.warn("Gagal mengambil CP dari folder lokal, menggunakan preset:", err);
     }
     // Fallback to local preset elements
     const presets = getPresetElements(subj, phs);

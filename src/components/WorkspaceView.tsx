@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { SchoolIdentity, CurriculumElement, LearningObjective, BabMateri } from "../types";
 import { subjectOptions } from "../data/curriculumData";
+import { getLocalSubjects } from "../utils/curriculumData";
 import { useSesiKurikulum } from "../context/SesiKurikulumContext";
 import { validateAlokasiJP } from "@/server/utils/kalenderUtils";
 import { getCalculatedIntrakurikulerJP, getValidJpForTp } from "../data/intrakurikulerJP";
@@ -206,34 +207,31 @@ export default function WorkspaceView({
   React.useEffect(() => {
     if (identity.jenjang && identity.phase) {
       setLoadingSdSubjects(true);
-      fetch("/api/curriculum/get-subjects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phase: identity.phase, jenjang: identity.jenjang })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.subjects) && data.subjects.length > 0) {
-            setSdSubjects(data.subjects);
-            
-            // Check if identity.subject is matched (case-insensitive and trimmed)
-            const matched = data.subjects.find((s: string) => s.toLowerCase() === identity.subject?.toLowerCase());
-            if (matched) {
-              if (matched !== identity.subject) {
-                // Keep the casing uniform
-                setIdentity(prev => ({ ...prev, subject: matched }));
-                handleSubjectOrPhaseChange(matched, identity.phase);
-              }
-            } else {
-              // Select the first one
-              const firstSubj = data.subjects[0];
-              setIdentity(prev => ({ ...prev, subject: firstSubj }));
-              handleSubjectOrPhaseChange(firstSubj, identity.phase);
+      try {
+        const subjects = getLocalSubjects(identity.phase, identity.jenjang);
+        if (subjects && subjects.length > 0) {
+          setSdSubjects(subjects);
+          
+          // Check if identity.subject is matched (case-insensitive and trimmed)
+          const matched = subjects.find((s: string) => s.toLowerCase() === identity.subject?.toLowerCase());
+          if (matched) {
+            if (matched !== identity.subject) {
+              // Keep the casing uniform
+              setIdentity(prev => ({ ...prev, subject: matched }));
+              handleSubjectOrPhaseChange(matched, identity.phase);
             }
+          } else {
+            // Select the first one
+            const firstSubj = subjects[0];
+            setIdentity(prev => ({ ...prev, subject: firstSubj }));
+            handleSubjectOrPhaseChange(firstSubj, identity.phase);
           }
-        })
-        .catch(err => console.error("Error loading subjects:", err))
-        .finally(() => setLoadingSdSubjects(false));
+        }
+      } catch (err) {
+        console.error("Error loading subjects locally:", err);
+      } finally {
+        setLoadingSdSubjects(false);
+      }
     } else {
       setSdSubjects([]);
     }
