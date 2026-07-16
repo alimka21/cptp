@@ -1,364 +1,190 @@
 import React, { useState, useEffect } from "react";
-import { Lock, Settings } from "lucide-react";
+import { Lock, Settings, CheckCircle2, XCircle, Loader2, HelpCircle } from "lucide-react";
+import { testGeminiConnection } from "../utils/geminiClient";
+import Swal from "sweetalert2";
 
 interface SettingsViewProps {
   isServerOnline: boolean | null;
 }
 
 export default function SettingsView({ isServerOnline }: SettingsViewProps) {
-  // Admin & Middleware Protection States
-  const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
-    return localStorage.getItem("is_admin_mode") === "true";
+  const [clientApiKey, setClientApiKey] = useState<string>(() => {
+    return localStorage.getItem("client_gemini_api_key") || "";
   });
-  const [adminToken, setAdminToken] = useState<string | null>(() => {
-    return localStorage.getItem("admin_session_token");
-  });
-  const [adminPinInput, setAdminPinInput] = useState<string>("");
-  const [adminError, setAdminError] = useState<string | null>(null);
-  const [adminStats, setAdminStats] = useState<any>(null);
-  const [loadingAdminStats, setLoadingAdminStats] = useState<boolean>(false);
 
-  // Auto-load admin stats if already logged in as admin
-  useEffect(() => {
-    if (isAdminMode && adminToken) {
-      setLoadingAdminStats(true);
-      fetch("/api/admin/stats", {
-        headers: {
-          "Authorization": `Bearer ${adminToken}`
-        }
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Silakan log in admin kembali.");
-        return res.json();
-      })
-      .then(data => {
-        if (data.success) {
-          setAdminStats(data.stats);
-        }
-      })
-      .catch((err) => {
-        setAdminError(err.message || "Gagal memuat diagnos statistik.");
-        setIsAdminMode(false);
-        setAdminToken(null);
-        localStorage.removeItem("is_admin_mode");
-        localStorage.removeItem("admin_session_token");
-      })
-      .finally(() => {
-        setLoadingAdminStats(false);
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientApiKey(e.target.value.trim());
+  };
+
+  const handleSaveApiKey = () => {
+    if (clientApiKey) {
+      localStorage.setItem("client_gemini_api_key", clientApiKey);
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Kunci API berhasil disimpan secara lokal.',
+        confirmButtonColor: '#2563eb'
+      });
+    } else {
+      localStorage.removeItem("client_gemini_api_key");
+      Swal.fire({
+        icon: 'info',
+        title: 'Terhapus',
+        text: 'Kunci API telah dihapus dari penyimpanan.',
+        confirmButtonColor: '#2563eb'
       });
     }
-  }, [isAdminMode, adminToken]);
+  };
 
-  // Admin Login Handler via server middleware
-  const handleAdminVerifySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminPinInput.trim()) {
-      setAdminError("PIN Admin diperlukan.");
+  const handleClearApiKey = () => {
+    setClientApiKey("");
+    localStorage.removeItem("client_gemini_api_key");
+    setTestStatus("idle");
+    Swal.fire({
+      icon: 'success',
+      title: 'Terhapus',
+      text: 'Kunci API telah dihapus.',
+      confirmButtonColor: '#2563eb'
+    });
+  };
+
+  const [isTesting, setIsTesting] = useState(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "success" | "error">("idle");
+  const [showTutorial, setShowTutorial] = useState(true);
+
+  const handleTestConnection = async () => {
+    if (!clientApiKey) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Peringatan',
+        text: 'Harap masukkan Kunci API terlebih dahulu.',
+        confirmButtonColor: '#2563eb'
+      });
       return;
     }
-    setAdminError(null);
-    setLoadingAdminStats(true);
-
-    try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: adminPinInput.trim() }),
+    
+    setIsTesting(true);
+    setTestStatus("idle");
+    
+    // Attempt the test
+    const success = await testGeminiConnection(clientApiKey);
+    
+    setTestStatus(success ? "success" : "error");
+    setIsTesting(false);
+    
+    if (success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Koneksi Berhasil!',
+        text: 'API Key valid dan siap digunakan.',
+        confirmButtonColor: '#16a34a'
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Gagal masuk admin.");
-      }
-
-      setAdminToken(data.token);
-      setIsAdminMode(true);
-      localStorage.setItem("is_admin_mode", "true");
-      localStorage.setItem("admin_session_token", data.token);
-      setAdminPinInput("");
-    } catch (err: any) {
-      setAdminError(err.message || "Kesalahan otentikasi admin backend.");
-    } finally {
-      setLoadingAdminStats(false);
-    }
-  };
-
-  // Safe logout of Admin area
-  const handleAdminLogout = () => {
-    setIsAdminMode(false);
-    setAdminToken(null);
-    setAdminStats(null);
-    setAdminError(null);
-    localStorage.removeItem("is_admin_mode");
-    localStorage.removeItem("admin_session_token");
-  };
-
-  // Refresh stats via protected API
-  const handleRefreshAdminStats = async () => {
-    if (!adminToken) return;
-    setLoadingAdminStats(true);
-    setAdminError(null);
-    try {
-      const res = await fetch("/api/admin/stats", {
-        headers: { "Authorization": `Bearer ${adminToken}` },
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Koneksi Gagal',
+        text: 'Gagal terhubung ke Gemini API. Periksa kembali API Key Anda.',
+        confirmButtonColor: '#dc2626'
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Gagal mengambil diagnos.");
-      }
-      setAdminStats(data.stats);
-    } catch (err: any) {
-      setAdminError(err.message || "Akses modul terproteksi gagal.");
-    } finally {
-      setLoadingAdminStats(false);
-    }
-  };
-
-  // Flush/Clear cache stats via protected API
-  const handleClearAdminCache = async () => {
-    if (!adminToken) return;
-    if (!window.confirm("Kosongkan log statistik aktivitas server-side?")) return;
-    setLoadingAdminStats(true);
-    setAdminError(null);
-    try {
-      const res = await fetch("/api/admin/clear-cache", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${adminToken}` },
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Operasi terproteksi dibatalkan.");
-      }
-      alert(data.message || "Cache dikosongkan.");
-      await handleRefreshAdminStats();
-    } catch (err: any) {
-      setAdminError(err.message || "Gagal menghubungi middleware.");
-    } finally {
-      setLoadingAdminStats(false);
     }
   };
 
   return (
     <main className="p-8 max-w-4xl w-full mx-auto space-y-6 animate-fade-in-up" id="settings-view">
       <div className="space-y-1">
-        <h3 className="text-lg font-extrabold text-slate-800">Status Integrasi Server-Side Administrasi</h3>
+        <h3 className="text-lg font-extrabold text-slate-800">Pengaturan Kunci API Gemini</h3>
         <p className="text-xs text-slate-500 leading-normal">
-          Tinjau koneksi aman API model kecerdasan buatan, enkripsi kop, dan standarisasi penulisan.
+          Isi Kunci API Gemini Anda di bawah ini untuk mengaktifkan fitur AI.
         </p>
       </div>
 
       <div className="bg-white border border-[#e2e8f0] rounded-3xl p-6 shadow-xs space-y-6">
-        {/* Status checklist rows */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-            <div>
-              <h4 className="text-xs font-bold text-slate-800">Koneksi Server Middle-ware</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Memastikan fungsionalitas hosting handal</p>
-            </div>
-            <span className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-lg border border-green-200 font-mono">
-              ONLINE &amp; AKTIF
-            </span>
+          <div className="flex items-center justify-between">
+            <h5 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <Lock className="w-4 h-4 text-slate-600" />
+              <span>Input API Key</span>
+            </h5>
           </div>
 
-          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-            <div>
-              <h4 className="text-xs font-bold text-slate-800">API Key Gemini AI Studio</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Dibutuhkan untuk merumuskan Bloom taksonomi berkalimat canggih</p>
-            </div>
-            {isServerOnline ? (
-              <span className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-lg border border-green-200 font-mono">
-                TERVAKSIN &amp; TERPASANG
-              </span>
-            ) : (
-              <span className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-semibold rounded-lg border border-amber-200 font-mono">
-                MOCK AUTOPILOT (Isi dev key di Settings jika ada)
-              </span>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              placeholder="Masukkan Kunci API Gemini Anda (AIzaSy...)"
+              value={clientApiKey}
+              onChange={handleApiKeyChange}
+              className="flex-1 text-sm bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400/85 font-mono shadow-xs"
+              id="client-gemini-api-key-input"
+            />
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleSaveApiKey}
+              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+            >
+              Simpan
+            </button>
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={isTesting || !clientApiKey}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-70"
+            >
+              {isTesting ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Menguji...</>
+              ) : (
+                <>Tes Koneksi</>
+              )}
+            </button>
+            {clientApiKey && (
+              <button
+                type="button"
+                onClick={handleClearApiKey}
+                className="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer"
+                id="clear-client-api-key"
+              >
+                Hapus
+              </button>
             )}
           </div>
 
-          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-            <div>
-              <h4 className="text-xs font-bold text-slate-800">Enkripsi Berkas Dokumen Master (.docx)</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">Memastikan format kompatibilitas Microsoft Word, Google Docs &amp; LibreOffice</p>
-            </div>
-            <span className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-lg border border-green-200 font-mono">
-              READY (docx v7.0)
-            </span>
-          </div>
-        </div>
-
-        {/* Warning detail description bar */}
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-500 leading-relaxed font-light">
-          Sistem ini diprogram secara full-stack menggunakan Express + React + Tailwind CSS. Keamanan berkas, metadata guru, data murid, dan kunci API tidak akan dibocorkan ke client browser sama sekali demi menjaga netralitas audit administrasi sekolah pengajar.
-        </div>
-      </div>
-
-      {/* ADMIN PORTAL PANEL */}
-      <div className="space-y-1 pt-4">
-        <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-blue-600" />
-          <span>Portal Administrator &amp; Diagnostik Server</span>
-        </h3>
-        <p className="text-xs text-slate-500 leading-normal">
-          Dilindungi oleh middleware backend. Monitor status server, lalu lintas API, dan bersihkan cache diagnostik secara real-time.
-        </p>
-      </div>
-
-      {!isAdminMode ? (
-        <form onSubmit={handleAdminVerifySubmit} className="bg-white border border-[#e2e8f0] rounded-3xl p-6 shadow-xs space-y-4" id="settings-admin-login-form">
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Verifikasi PIN Keamanan Admin</label>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                placeholder="Masukkan PIN Administrator..."
-                value={adminPinInput}
-                onChange={(e) => setAdminPinInput(e.target.value)}
-                className="flex-1 text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400/80"
-                id="settings-admin-pin"
-              />
-              <button
-                type="submit"
-                disabled={loadingAdminStats}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition"
-                id="settings-admin-login-btn"
-              >
-                {loadingAdminStats ? "Memproses..." : "Masuk Admin"}
-              </button>
-            </div>
-            <span className="text-[10px] text-slate-400 block mt-1">
-              *PIN Default: <strong className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-600">kurikulumnasional</strong>
-            </span>
-          </div>
-
-          {adminError && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium" id="settings-admin-error">
-              {adminError}
+          {testStatus === "success" && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-xs mt-4">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <span className="font-semibold">Koneksi Berhasil! API Key valid dan siap digunakan.</span>
             </div>
           )}
-        </form>
-      ) : (
-        <div className="space-y-4" id="settings-admin-portal">
-          <div className="bg-white border border-[#e2e8f0] rounded-3xl p-6 shadow-xs space-y-6">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                <div>
-                  <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest block font-sans">Sesi Admin Terverifikasi</span>
-                  <span className="text-[10px] text-slate-400 font-medium font-sans">Middleware Proteksi Backend: AKTIF</span>
-                </div>
-              </div>
-              <button
-                onClick={handleAdminLogout}
-                className="px-3.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[10px] font-bold hover:bg-slate-200 transition"
-                id="settings-admin-logout-btn"
-              >
-                Keluar Sesi Admin
-              </button>
+          
+          {testStatus === "error" && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs mt-4">
+              <XCircle className="w-4 h-4 text-red-600" />
+              <span className="font-semibold">Koneksi Gagal. Periksa kembali API Key Anda.</span>
             </div>
+          )}
+        </div>
 
-            {adminError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs" id="settings-admin-dash-error">
-                {adminError}
-              </div>
-            )}
-
-            {/* STATS PANEL CONTAINER */}
-            {loadingAdminStats && !adminStats ? (
-              <div className="text-center py-6 text-xs text-slate-400">
-                Memuat data diagnostik dari API middleware...
-              </div>
-            ) : adminStats ? (
-              <div className="space-y-6">
-                
-                {/* Main Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  
-                  <div className="p-4 bg-blue-50/55 border border-blue-100 rounded-2xl flex flex-col justify-between">
-                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Total Hit API</span>
-                    <div className="mt-2">
-                      <span className="text-3xl font-extrabold font-mono text-blue-800">{adminStats.totalRequests}</span>
-                      <span className="text-[10px] text-slate-400 block mt-1">Semenjak server dimulai</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-indigo-50/55 border border-indigo-100 rounded-2xl flex flex-col justify-between">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Analisis CP (AI)</span>
-                    <div className="mt-2">
-                      <span className="text-3xl font-extrabold font-mono text-indigo-800">{adminStats.cpAnalyses}</span>
-                      <span className="text-[10px] text-slate-400 block mt-1">Pecahan TP teranalisis</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-violet-50/55 border border-violet-102 rounded-2xl flex flex-col justify-between">
-                    <span className="text-[10px] font-black text-violet-500 uppercase tracking-widest">Unduhan Dokumen</span>
-                    <div className="mt-2">
-                      <span className="text-3xl font-extrabold font-mono text-violet-800">{adminStats.docxExports}</span>
-                      <span className="text-[10px] text-slate-400 block mt-1">Ekspor berkas DOCX word</span>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Detail Server stats diagnostics */}
-                <div className="bg-slate-50 border border-slate-150 rounded-2xl p-4 space-y-3">
-                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Spesifikasi Lingkungan &amp; Diagnostik Node.js</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Runtime Version:</span>
-                      <span className="font-semibold text-slate-700">{adminStats.nodeVersion}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Suhu / OS Platform:</span>
-                      <span className="font-semibold text-slate-700 uppercase">{adminStats.platform}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Memory RSS:</span>
-                      <span className="font-semibold text-slate-700 font-mono">{adminStats.memoryUsageMB.rss} MB</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Total Heap Memory:</span>
-                      <span className="font-semibold text-slate-700 font-mono">{adminStats.memoryUsageMB.heapUsed} / {adminStats.memoryUsageMB.heapTotal} MB</span>
-                    </div>
-                    <div className="flex justify-between col-span-1 sm:col-span-2 border-t pt-2 mt-1 border-slate-200">
-                      <span className="text-slate-400">Waktu Aktif Server (Uptime):</span>
-                      <span className="font-semibold text-slate-700">{adminStats.uptimeFormatted}</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            ) : (
-              <div className="text-center py-6 text-xs text-slate-400">
-                Data tidak tersedia. Tekan Ambil Data untuk memicu request.
-              </div>
-            )}
-
-            {/* Diagnostic operations list */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                type="button"
-                onClick={handleRefreshAdminStats}
-                disabled={loadingAdminStats}
-                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 disabled:opacity-50 transition"
-                id="settings-admin-refresh-stats"
-              >
-                {loadingAdminStats ? "Memperbarui..." : "Ambil Data Terbaru"}
-              </button>
-              <button
-                type="button"
-                onClick={handleClearAdminCache}
-                disabled={loadingAdminStats}
-                className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition"
-                id="settings-admin-clear-cache"
-              >
-                Kosongkan Cache Statistik
-              </button>
-            </div>
-
+        <div className="pt-6 border-t border-slate-100">
+          <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-3">
+            <h6 className="text-sm font-bold text-blue-800 flex items-center gap-1.5">
+              <HelpCircle className="w-4 h-4" />
+              Panduan Mendapatkan Gemini API Key
+            </h6>
+            <ol className="list-decimal pl-4 text-xs text-slate-700 space-y-2 font-medium leading-relaxed">
+              <li>Kunjungi portal resmi <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-bold">Google AI Studio</a> dan login dengan akun Google Anda.</li>
+              <li>Setujui syarat dan ketentuan jika Anda baru pertama kali login.</li>
+              <li>Di halaman utama, klik tombol biru <strong>"Create API key"</strong>.</li>
+              <li>Pilih proyek Google Cloud yang ada atau biarkan sistem membuat proyek baru untuk Anda, lalu konfirmasi.</li>
+              <li>Salin Kunci API yang muncul (Kunci ini biasanya berawalan dengan teks <code className="bg-white border border-slate-200 px-1 py-0.5 rounded text-[11px] text-blue-600">AIzaSy...</code>).</li>
+              <li>Tempelkan Kunci API tersebut pada kolom input di atas, lalu klik <strong>Simpan</strong>.</li>
+            </ol>
+            <p className="text-[10px] text-slate-500 pt-2 border-t border-blue-100 mt-3">
+              * Privasi Terjamin: Kunci API Anda disimpan dengan aman secara lokal di dalam memori browser perangkat Anda (localStorage) dan tidak pernah dibagikan atau disimpan ke server kami.
+            </p>
           </div>
         </div>
-      )}
+      </div>
     </main>
   );
 }

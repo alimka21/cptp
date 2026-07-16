@@ -42,7 +42,7 @@ interface WorkspaceViewProps {
   setBabs: React.Dispatch<React.SetStateAction<BabMateri[]>>;
   activeTab: "identitas" | "cp" | "tp" | "atp" | "prota" | "promes" | "kktp" | "alokasi";
   setActiveTab: React.Dispatch<React.SetStateAction<"identitas" | "cp" | "tp" | "atp" | "prota" | "promes" | "kktp" | "alokasi">>;
-  handleDownloadDocx: (targetTab: string) => void;
+  handleDownloadDocx: (targetTab: string, additionalParams?: any) => void;
   handleAISimplifyAllTps: () => void;
   handleMoveTp: (index: number, direction: "up" | "down") => void;
   handleUpdateTpText: (id: string, text: string) => void;
@@ -124,6 +124,8 @@ export default function WorkspaceView({
     ? rawGrades.filter(g => phaseAvailableGrades.includes(g))
     : [phaseAvailableGrades[0]];
 
+  const [kktpOption, setKktpOption] = React.useState<"A" | "B" | "C">("A");
+
   // Steps Definition array for step by step sequential flow
   const stepsList = [
     { id: "identitas", label: "Identitas", stepNo: 1, desc: "Info & Konfigurasi" },
@@ -132,7 +134,7 @@ export default function WorkspaceView({
     { id: "atp", label: "Alur (ATP)", stepNo: 4, desc: "Urutan KBM Logis" },
     { id: "prota", label: "PROTA", stepNo: 5, desc: "Program Tahunan" },
     { id: "promes", label: "PROMES", stepNo: 6, desc: "Program Semester" },
-    { id: "kktp", label: "KKTP Rubrik", stepNo: 7, desc: "Kriteria Ketuntasan" },
+    { id: "kktp", label: "KKTP", stepNo: 7, desc: "Kriteria Ketuntasan" },
     { id: "alokasi", label: "Alokasi JP", stepNo: 8, desc: "Analisis Alokasi" },
   ] as const;
 
@@ -1677,21 +1679,74 @@ export default function WorkspaceView({
         {/* ========================================================= */}
         {activeTab === "kktp" && (
           <div className="space-y-4 animate-fade-in-up md:min-h-[350px]" id="tab-content-kktp">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3 gap-3">
               <div>
                 <h4 className="text-sm font-extrabold text-slate-805 flex items-center gap-2">
                   <Layers className="w-4 h-4 text-blue-600" />
-                  <span>Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) Pendekatan Rubrik</span>
+                  <span>Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) — Pendekatan {kktpOption === "A" ? "Deskripsi Kriteria" : kktpOption === "B" ? "Rubrik" : "Interval Nilai"}</span>
                 </h4>
-                <p className="text-xs text-slate-400 mt-0.5">Penilaian interval capaian siswa untuk menyusun pembelajaran remidial</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {kktpOption === "A" 
+                    ? "Menetapkan kriteria ketuntasan secara kualitatif (memadai / tidak memadai)" 
+                    : kktpOption === "B" 
+                    ? "Menyusun rubrik deskripsi bertingkat berdasarkan tingkat kompetensi siswa" 
+                    : "Menyusun kriteria berdasarkan skala interval nilai persentase hasil asesmen"}
+                </p>
               </div>
               <button
-                onClick={() => handleDownloadDocx("kktp")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
+                onClick={() => handleDownloadDocx("kktp", { kktpOption })}
+                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3.5 py-2 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                id="kktp-download-btn"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Unduh KKTP .docx</span>
               </button>
+            </div>
+
+            {/* Segmented Control Selector for KKTP Option A / B / C */}
+            <div className="bg-slate-50 border border-slate-200/80 p-2 rounded-2xl flex flex-col md:flex-row md:items-center gap-3.5" id="kktp-approach-selector">
+              <span className="text-xs font-black text-slate-700 md:pl-2">Pilih Pendekatan KKTP (Kemdikbudristek):</span>
+              <div className="flex flex-wrap gap-1 bg-slate-200/50 p-1 rounded-xl border border-slate-200 w-fit">
+                <button
+                  type="button"
+                  onClick={() => setKktpOption("A")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    kktpOption === "A"
+                      ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                      : "text-slate-500 hover:text-slate-850"
+                  }`}
+                  id="btn-kktp-opt-a"
+                >
+                  <span className="w-4 h-4 rounded-full bg-blue-50 text-[9px] font-black flex items-center justify-center border border-blue-200">A</span>
+                  <span>Deskripsi Kriteria</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKktpOption("B")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    kktpOption === "B"
+                      ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                      : "text-slate-500 hover:text-slate-850"
+                  }`}
+                  id="btn-kktp-opt-b"
+                >
+                  <span className="w-4 h-4 rounded-full bg-blue-50 text-[9px] font-black flex items-center justify-center border border-blue-200">B</span>
+                  <span>Rubrik Ketercapaian</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKktpOption("C")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    kktpOption === "C"
+                      ? "bg-white text-blue-700 shadow-sm border border-slate-200"
+                      : "text-slate-500 hover:text-slate-850"
+                  }`}
+                  id="btn-kktp-opt-c"
+                >
+                  <span className="w-4 h-4 rounded-full bg-blue-50 text-[9px] font-black flex items-center justify-center border border-blue-200">C</span>
+                  <span>Interval Nilai</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -1709,35 +1764,116 @@ export default function WorkspaceView({
 
                     <div className="overflow-hidden border border-[#e2e8f0] rounded-2xl bg-white">
                       <table className="w-full text-left border-collapse text-[10.5px]">
-                        <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
-                          <tr>
-                            <th className="px-4 py-3 text-center w-24">Kode</th>
-                            <th className="px-4 py-3 w-48">Indikator TP</th>
-                            <th className="px-4 py-3 text-slate-505 w-32">0-40% (Bimbingan)</th>
-                            <th className="px-4 py-3 text-slate-505 w-32">41-60% (Cukup)</th>
-                            <th className="px-4 py-3 text-slate-505 w-32">61-80% (Layak)</th>
-                            <th className="px-4 py-3 text-slate-505 w-32">81-100% (Mahir)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-700 align-top">
-                          {filteredTps.map((tp) => (
-                            <tr key={tp.id} className="hover:bg-slate-50/10">
-                              <td className="px-4 py-3 text-center font-mono font-bold text-blue-600">{tp.code}</td>
-                              <td className="px-4 py-3 font-semibold text-slate-800 leading-normal">{tp.text}</td>
-                              <td className="px-4 py-3 text-slate-400 leading-normal">Konteks gagasan dasar belum tampak, remidial terfokus.</td>
-                              <td className="px-4 py-3 text-slate-400 leading-normal">Mampu melafalkan dasar materi secara parsial dengan bantuan.</td>
-                              <td className="px-4 py-3 text-slate-400 leading-normal">Konsep dikuasai matang &amp; mandiri, merampungkan seluruh latihan.</td>
-                              <td className="px-4 py-3 text-slate-400 leading-normal">Pemahaman mendalam melampaui standar kompetensi dasar kelas.</td>
-                            </tr>
-                          ))}
-                          {filteredTps.length === 0 && (
+                        {kktpOption === "A" && (
+                          <>
+                            <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
+                              <tr>
+                                <th className="px-4 py-3 text-center w-24">Kode</th>
+                                <th className="px-4 py-3 w-72">Kriteria Penilaian / Indikator TP</th>
+                                <th className="px-4 py-3 text-center text-rose-700 w-32">Tidak Memadai</th>
+                                <th className="px-4 py-3 text-center text-green-700 w-32">Memadai</th>
+                                <th className="px-4 py-3 text-slate-600">Rencana Tindak Lanjut / Catatan Masukan</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700 align-top">
+                              {filteredTps.map((tp) => (
+                                <tr key={tp.id} className="hover:bg-slate-50/10">
+                                  <td className="px-4 py-3.5 text-center font-mono font-bold text-blue-600">{tp.code}</td>
+                                  <td className="px-4 py-3.5 font-semibold text-slate-800 leading-normal">{tp.text}</td>
+                                  <td className="px-4 py-3.5 text-center">
+                                    <span className="inline-flex items-center px-2 py-1 bg-rose-50 text-rose-600 rounded-md border border-rose-100 font-bold text-[9px] uppercase tracking-wide">
+                                      ❌ Belum Muncul
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3.5 text-center">
+                                    <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-600 rounded-md border border-green-100 font-bold text-[9px] uppercase tracking-wide">
+                                      ✔️ Sudah Muncul
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3.5 text-slate-500 leading-normal font-light">
+                                    Peserta didik dianggap tuntas jika mayoritas kriteria bernilai Memadai. Bila belum memadai, lakukan intervensi pembelajaran personal pada indikator materi terkait.
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </>
+                        )}
+
+                        {kktpOption === "B" && (
+                          <>
+                            <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
+                              <tr>
+                                <th className="px-4 py-3 text-center w-24">Kode</th>
+                                <th className="px-4 py-3 w-48">Indikator TP</th>
+                                <th className="px-4 py-3 text-slate-505 w-32">Baru Berkembang (0-40%)</th>
+                                <th className="px-4 py-3 text-slate-505 w-32">Layak (41-60%)</th>
+                                <th className="px-4 py-3 text-slate-505 w-32">Cakap (61-80%)</th>
+                                <th className="px-4 py-3 text-slate-505 w-32">Mahir (81-100%)</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700 align-top">
+                              {filteredTps.map((tp) => (
+                                <tr key={tp.id} className="hover:bg-slate-50/10">
+                                  <td className="px-4 py-3.5 text-center font-mono font-bold text-blue-600">{tp.code}</td>
+                                  <td className="px-4 py-3.5 font-semibold text-slate-800 leading-normal">{tp.text}</td>
+                                  <td className="px-4 py-3.5 text-slate-400 leading-normal">Konteks gagasan dasar belum tampak, butuh pendampingan total.</td>
+                                  <td className="px-4 py-3.5 text-slate-400 leading-normal">Mampu melafalkan dasar materi secara parsial dengan stimulus bantuan.</td>
+                                  <td className="px-4 py-3.5 text-slate-400 leading-normal">Konsep dikuasai matang, mandiri merampungkan seluruh latihan evaluasi.</td>
+                                  <td className="px-4 py-3.5 text-slate-400 leading-normal">Pemahaman mendalam melampaui standar kompetensi dasar kelas.</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </>
+                        )}
+
+                        {kktpOption === "C" && (
+                          <>
+                            <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
+                              <tr>
+                                <th className="px-4 py-3 text-center w-24">Kode</th>
+                                <th className="px-4 py-3 w-48">Indikator TP</th>
+                                <th className="px-4 py-3 text-rose-700 bg-rose-50/20 w-32">0 - 40%</th>
+                                <th className="px-4 py-3 text-amber-700 bg-amber-50/20 w-32">41 - 60%</th>
+                                <th className="px-4 py-3 text-blue-700 bg-blue-50/20 w-32">61 - 80%</th>
+                                <th className="px-4 py-3 text-green-700 bg-green-50/20 w-32">81 - 100%</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700 align-top">
+                              {filteredTps.map((tp) => (
+                                <tr key={tp.id} className="hover:bg-slate-50/10">
+                                  <td className="px-4 py-3.5 text-center font-mono font-bold text-blue-600">{tp.code}</td>
+                                  <td className="px-4 py-3.5 font-semibold text-slate-800 leading-normal">{tp.text}</td>
+                                  <td className="px-4 py-3.5 text-rose-600 bg-rose-50/10 leading-normal">
+                                    <p className="font-semibold text-[10px]">Perlu Bimbingan</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 font-light">Belum tuntas, wajib mengikuti remedial di seluruh bagian.</p>
+                                  </td>
+                                  <td className="px-4 py-3.5 text-amber-600 bg-amber-50/10 leading-normal">
+                                    <p className="font-semibold text-[10px]">Cukup</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 font-light">Belum tuntas, mengikuti remedial pada indikator tertentu.</p>
+                                  </td>
+                                  <td className="px-4 py-3.5 text-blue-600 bg-blue-50/10 leading-normal">
+                                    <p className="font-semibold text-[10px]">Baik</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 font-light">Sudah tuntas, dapat melanjutkan ke tujuan berikutnya.</p>
+                                  </td>
+                                  <td className="px-4 py-3.5 text-green-600 bg-green-50/10 leading-normal">
+                                    <p className="font-semibold text-[10px]">Sangat Baik</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 font-light">Sudah tuntas, perlu diberikan tantangan pengayaan.</p>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </>
+                        )}
+
+                        {filteredTps.length === 0 && (
+                          <tbody>
                             <tr>
                               <td colSpan={6} className="px-4 py-6 text-center text-slate-400 font-light font-sans">
                                 Belum ada TP yang didelegasikan untuk Kelas {grade}.
                               </td>
                             </tr>
-                          )}
-                        </tbody>
+                          </tbody>
+                        )}
                       </table>
                     </div>
                   </div>

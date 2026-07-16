@@ -657,7 +657,79 @@ function buildPromesTemplate(): Document {
   return new Document({ sections: [{ properties: { page: { size: { orientation: "landscape" } } }, children }] });
 }
 
-function buildKktpTemplate(): Document {
+function buildKktpTemplate(kktpOption: string = "A"): Document {
+  let tableHeaderRow: TableRow;
+  let tableDataRow: TableRow;
+  let titleBarText = "Rubrik Ketercapaian (per Tujuan Pembelajaran) Kelas {grade}";
+  let noteText = "Catatan: Peserta didik dianggap mencapai tujuan pembelajaran apabila berada minimal pada level \"Baik\".";
+
+  if (kktpOption === "A") {
+    titleBarText = "Deskripsi Kriteria Ketercapaian (per Tujuan Pembelajaran) Kelas {grade}";
+    noteText = "Catatan: Peserta didik dianggap mencapai tujuan pembelajaran jika kriteria penilaian berada pada kategori \"Memadai\".";
+    tableHeaderRow = new TableRow({
+      tableHeader: true,
+      children: [
+        createPremiumHeaderCell("Tujuan Pembelajaran / Indikator", "1D4ED8"),
+        createPremiumHeaderCell("Tidak Memadai", "DC2626"),
+        createPremiumHeaderCell("Memadai", "16A34A"),
+        createPremiumHeaderCell("Keterangan & Rencana Tindak Lanjut", "2563EB"),
+      ],
+    });
+    tableDataRow = new TableRow({
+      children: [
+        createPremiumCell("{#tps}{text}", { bold: true }),
+        createPremiumCell("Belum Muncul (Belum Tuntas)", { bgColor: "FEF2F2", textColor: "991B1B" }),
+        createPremiumCell("Sudah Muncul (Tuntas)", { bgColor: "F0FDF4", textColor: "166534" }),
+        createPremiumCell("Bila belum memadai, lakukan intervensi terbimbing; bila sudah, berikan pengayaan.{/tps}", { textColor: "475569" }),
+      ],
+    });
+  } else if (kktpOption === "C") {
+    titleBarText = "Interval Nilai Ketercapaian (per Tujuan Pembelajaran) Kelas {grade}";
+    noteText = "Catatan: Peserta didik dianggap mencapai tujuan pembelajaran apabila memperoleh nilai minimal pada interval 61-80% (Baik).";
+    tableHeaderRow = new TableRow({
+      tableHeader: true,
+      children: [
+        createPremiumHeaderCell("Tujuan Pembelajaran / Indikator", "1D4ED8"),
+        createPremiumHeaderCell("0-40% (Perlu Bimbingan)", "DC2626"),
+        createPremiumHeaderCell("41-60% (Cukup)", "D97706"),
+        createPremiumHeaderCell("61-80% (Baik)", "2563EB"),
+        createPremiumHeaderCell("81-100% (Sangat Baik)", "16A34A"),
+      ],
+    });
+    tableDataRow = new TableRow({
+      children: [
+        createPremiumCell("{#tps}{text}", { bold: true }),
+        createPremiumCell("{interval1}", { bgColor: "FEF2F2", textColor: "991B1B" }),
+        createPremiumCell("{interval2}", { bgColor: "FFFBEB", textColor: "92400E" }),
+        createPremiumCell("{interval3}", { bgColor: "EFF6FF", textColor: "1E40AF" }),
+        createPremiumCell("{interval4}{/tps}", { bgColor: "F0FDF4", textColor: "166534" }),
+      ],
+    });
+  } else {
+    // Opsi B / Default Rubrik
+    titleBarText = "Rubrik Ketercapaian (per Tujuan Pembelajaran) Kelas {grade}";
+    noteText = "Catatan: Peserta didik dianggap mencapai tujuan pembelajaran apabila berada minimal pada level \"Cakap\" atau \"Baik\".";
+    tableHeaderRow = new TableRow({
+      tableHeader: true,
+      children: [
+        createPremiumHeaderCell("Tujuan Pembelajaran / Indikator", "1D4ED8"),
+        createPremiumHeaderCell("Baru Berkembang", "DC2626"),
+        createPremiumHeaderCell("Layak", "D97706"),
+        createPremiumHeaderCell("Cakap", "2563EB"),
+        createPremiumHeaderCell("Mahir", "16A34A"),
+      ],
+    });
+    tableDataRow = new TableRow({
+      children: [
+        createPremiumCell("{#tps}{text}", { bold: true }),
+        createPremiumCell("{interval1}", { bgColor: "FEF2F2", textColor: "991B1B" }),
+        createPremiumCell("{interval2}", { bgColor: "FFFBEB", textColor: "92400E" }),
+        createPremiumCell("{interval3}", { bgColor: "EFF6FF", textColor: "1E40AF" }),
+        createPremiumCell("{interval4}{/tps}", { bgColor: "F0FDF4", textColor: "166534" }),
+      ],
+    });
+  }
+
   const children = [
     createDocumentHeader("Kriteria Ketercapaian Tujuan Pembelajaran"),
     createParagraph("", { afterSpace: 200 }),
@@ -668,34 +740,17 @@ function buildKktpTemplate(): Document {
     
     createParagraph("{#gradesList}", { size: 1 }),
     createParagraph("KELAS {grade}", { bold: true, size: 20, color: "1D4ED8", beforeSpace: 200, afterSpace: 100 }),
-    createDesignBar("Rubrik Ketercapaian (per Tujuan Pembelajaran) Kelas {grade}"),
+    createDesignBar(titleBarText),
     createParagraph("", { afterSpace: 200 }),
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [
-        new TableRow({
-          tableHeader: true,
-          children: [
-            createPremiumHeaderCell("Tujuan Pembelajaran", "1D4ED8"),
-            createPremiumHeaderCell("Perlu Bimbingan", "DC2626"),
-            createPremiumHeaderCell("Cukup", "D97706"),
-            createPremiumHeaderCell("Baik", "2563EB"),
-            createPremiumHeaderCell("Sangat Baik", "16A34A"),
-          ],
-        }),
-        new TableRow({
-          children: [
-            createPremiumCell("{#tps}{text}", { bold: true }),
-            createPremiumCell("{interval1}", { bgColor: "FEF2F2", textColor: "991B1B" }),
-            createPremiumCell("{interval2}", { bgColor: "FFFBEB", textColor: "92400E" }),
-            createPremiumCell("{interval3}", { bgColor: "EFF6FF", textColor: "1E40AF" }),
-            createPremiumCell("{interval4}{/tps}", { bgColor: "F0FDF4", textColor: "166534" }),
-          ],
-        }),
+        tableHeaderRow,
+        tableDataRow,
       ],
     }),
     createParagraph("", { afterSpace: 400 }),
-    createParagraph("Catatan: Peserta didik dianggap mencapai tujuan pembelajaran apabila berada minimal pada level \"Baik\".", { italic: true, size: 18, color: "475569" }),
+    createParagraph(noteText, { italic: true, size: 18, color: "475569" }),
     createParagraph("", { afterSpace: 400 }),
     createParagraph("{/gradesList}", { size: 1 }),
     
@@ -1438,7 +1493,7 @@ export async function generateDocx(templateName: string, data: any): Promise<Buf
   else if (templateName === "atp") doc = buildAtpTemplate();
   else if (templateName === "prota") doc = buildProtaTemplate();
   else if (templateName === "promes") doc = buildPromesTemplate();
-  else if (templateName === "kktp") doc = buildKktpTemplate();
+  else if (templateName === "kktp") doc = buildKktpTemplate(data?.kktpOption || "A");
   else if (templateName === "alokasi") doc = buildAlokasiTemplate();
   else doc = buildAllTemplate();
 

@@ -9,6 +9,7 @@ import { SchoolIdentity, CurriculumElement, LearningObjective, BabMateri } from 
 import { getPresetElements, getPresetBabs } from "./data/curriculumData";
 import { getLocalCP } from "./utils/curriculumData";
 import { getCalculatedIntrakurikulerJP, getValidJpForTp } from "./data/intrakurikulerJP";
+import { generateTpsClientSide } from "./utils/geminiClient";
 import Swal from "sweetalert2";
 
 // Import modular screens
@@ -386,7 +387,7 @@ function AppContent() {
   };
 
   // Call robust DOCX Export API
-  const handleDownloadDocx = async (targetTab: string) => {
+  const handleDownloadDocx = async (targetTab: string, additionalParams?: any) => {
     try {
       const response = await fetch("/api/curriculum/export-docx", {
         method: "POST",
@@ -397,7 +398,8 @@ function AppContent() {
           babs,
           elements,
           promesSelections,
-          tab: targetTab
+          tab: targetTab,
+          ...additionalParams
         })
       });
 
@@ -421,10 +423,16 @@ function AppContent() {
 
   // Interactive AI rewrite/improvement for TPs using Gemini
   const handleAISimplifyAllTps = async () => {
-    if (!isServerOnline) {
+    // 1. Determine local key fallback if backend is offline/static (e.g., on Vercel)
+    // Read from Vite's statically replaced variables
+    // @ts-ignore
+    const staticEnvGemini = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || "";
+    const localKey = localStorage.getItem("client_gemini_api_key") || staticEnvGemini || "";
+
+    if (!isServerOnline && !localKey) {
       Swal.fire({
         title: "Kunci API Belum Terpasang",
-        text: "Kunci API Gemini belum diatur di menu Pengaturan. Harap isi Kunci API di menu Pengaturan untuk memproses fitur AI cerdas.",
+        text: "Kunci API Gemini belum diatur di menu Pengaturan. Harap isi Kunci API di menu Pengaturan (Vercel Mode) untuk memproses fitur AI cerdas langsung dari browser Anda.",
         icon: "info",
         confirmButtonColor: "#2563eb"
       });
@@ -435,24 +443,45 @@ function AppContent() {
     setLoadingMsg("Sistem AI mengoptimasi taksonomi kata kerja dan struktur operasional...");
 
     try {
-      const response = await fetch("/api/curriculum/analyze-cp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: identity.subject,
-          phase: identity.phase,
-          elements,
-          identity
-        })
-      });
+      let dataTps: any[] = [];
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Batas kuota terlampaui atau respon server tidak valid.");
+      if (isServerOnline) {
+        // Mode 1: Server-side proxy (Highly secure, hides key)
+        const response = await fetch("/api/curriculum/analyze-cp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject: identity.subject,
+            phase: identity.phase,
+            elements,
+            identity
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Batas kuota terlampaui atau respon server tidak valid.");
+        }
+
+        const data = await response.json();
+        if (data.success && Array.isArray(data.tps)) {
+          dataTps = data.tps;
+        } else {
+          throw new Error("Format respons AI dari server tidak valid.");
+        }
+      } else {
+        // Mode 2: Client-side direct call (Perfect fallback for static Vercel deployments)
+        console.log("[Dual-Mode] Server offline/static. Running Gemini AI directly on client side.");
+        dataTps = await generateTpsClientSide(
+          identity.subject,
+          identity.phase,
+          elements,
+          identity,
+          localKey
+        );
       }
 
-      const data = await response.json();
-      if (data.success && Array.isArray(data.tps)) {
+      if (Array.isArray(dataTps) && dataTps.length > 0) {
         const subjectAbbrMap: { [key: string]: string } = {
           "Matematika": "MTK",
           "Pancasila": "PP",
@@ -483,7 +512,7 @@ function AppContent() {
         const finalGrades = validGrades.length > 0 ? validGrades : [phaseAvailableGrades[0]];
 
         const elementCounts: Record<string, number> = {};
-        const formatted = data.tps.map((obj: any, idx: number) => {
+        const formatted = dataTps.map((obj: any, idx: number) => {
           const tpKelas = (obj.kelas && finalGrades.includes(String(obj.kelas)))
             ? String(obj.kelas)
             : (finalGrades[0] || String(obj.kelas) || "7");

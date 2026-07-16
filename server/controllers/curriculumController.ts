@@ -154,6 +154,7 @@ export async function exportDocx(req: Request, res: Response, next: NextFunction
       tps,
       babs,
       elements,
+      kktpOption: req.body.kktpOption,
     });
 
     const sanitizedFileName = `administrasi_${tab}_${identity.subject.replace(/\s+/g, "_")}_fase_${identity.phase}.docx`.toLowerCase();

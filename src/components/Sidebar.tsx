@@ -132,7 +132,7 @@ export default function Sidebar({
     { id: "atp" as const, label: "04 — Alur Tujuan Pembelajaran", icon: GitBranch },
     { id: "prota" as const, label: "05 — Program Tahunan", icon: Calendar },
     { id: "promes" as const, label: "06 — Program Semester", icon: Clock },
-    { id: "kktp" as const, label: "07 — KKTP Rubrik", icon: ClipboardCheck },
+    { id: "kktp" as const, label: "07 — KKTP (Kriteria)", icon: ClipboardCheck },
     { id: "alokasi" as const, label: "08 — Alokasi JP", icon: LineChart },
   ];
 
@@ -166,6 +166,21 @@ export default function Sidebar({
         >
           <LayoutDashboard className={`w-4 h-4 ${activeView === "dashboard" ? "text-[#0058be]" : "text-slate-400"}`} />
           <span className="text-xs font-semibold uppercase tracking-wider font-mono">Beranda Utama</span>
+        </button>
+
+        {/* API Key Settings View */}
+        <button
+          onClick={() => setActiveView("settings")}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition duration-150 outline-none text-left ${
+            activeView === "settings"
+              ? "bg-blue-50 text-[#0058be] font-bold border-l-4 border-[#0058be] pl-2"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 border-l-4 border-transparent"
+          }`}
+          id="sidebar-btn-settings"
+          title="Pengaturan Kunci API"
+        >
+          <Sliders className={`w-4 h-4 ${activeView === "settings" ? "text-[#0058be]" : "text-slate-400"}`} />
+          <span className="text-xs font-semibold uppercase tracking-wider font-mono">Pengaturan API</span>
         </button>
 
         {/* Separator */}
