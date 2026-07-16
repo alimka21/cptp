@@ -5,7 +5,10 @@ import { fileURLToPath } from "url";
 
 export function getBaseDir() {
   const pathsToTry = [
+    path.join(process.cwd(), "public/capaian_pembelajaran"),
+    path.join(process.cwd(), "public", "capaian_pembelajaran"),
     path.join(process.cwd(), "capaian_pembelajaran"),
+    "/var/task/public/capaian_pembelajaran",
     "/var/task/capaian_pembelajaran"
   ];
 
@@ -13,6 +16,8 @@ export function getBaseDir() {
     const currentFile = fileURLToPath(import.meta.url);
     const currentDir = path.dirname(currentFile);
     pathsToTry.push(
+      path.join(currentDir, "../public/capaian_pembelajaran"),
+      path.join(currentDir, "public/capaian_pembelajaran"),
       path.join(currentDir, "../capaian_pembelajaran"),
       path.join(currentDir, "capaian_pembelajaran"),
       path.join(currentDir, "../../capaian_pembelajaran"),
@@ -26,6 +31,8 @@ export function getBaseDir() {
   try {
     if (typeof __dirname !== "undefined" && __dirname) {
       pathsToTry.push(
+        path.join(__dirname, "../public/capaian_pembelajaran"),
+        path.join(__dirname, "public/capaian_pembelajaran"),
         path.join(__dirname, "../capaian_pembelajaran"),
         path.join(__dirname, "capaian_pembelajaran"),
         path.join(__dirname, "../../capaian_pembelajaran"),
@@ -42,7 +49,7 @@ export function getBaseDir() {
     }
   }
 
-  return path.join(process.cwd(), "capaian_pembelajaran");
+  return path.join(process.cwd(), "public/capaian_pembelajaran");
 }
 
 import { Type } from "@google/genai";
