@@ -1,12 +1,27 @@
 import { Request, Response, NextFunction } from "express";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 
 export function getBaseDir() {
   const pathsToTry = [
     path.join(process.cwd(), "capaian_pembelajaran"),
     "/var/task/capaian_pembelajaran"
   ];
+
+  try {
+    const currentFile = fileURLToPath(import.meta.url);
+    const currentDir = path.dirname(currentFile);
+    pathsToTry.push(
+      path.join(currentDir, "../capaian_pembelajaran"),
+      path.join(currentDir, "capaian_pembelajaran"),
+      path.join(currentDir, "../../capaian_pembelajaran"),
+      path.join(currentDir, "../../../capaian_pembelajaran"),
+      path.join(currentDir, "../../../../capaian_pembelajaran")
+    );
+  } catch (e) {
+    // ignore
+  }
 
   try {
     if (typeof __dirname !== "undefined" && __dirname) {

@@ -2,7 +2,10 @@
   "version": 2,
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "capaian_pembelajaran/**"
+      "includeFiles": [
+        "capaian_pembelajaran/**",
+        "server/templates/**"
+      ]
     }
   },
   "rewrites": [
