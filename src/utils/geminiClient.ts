@@ -33,9 +33,9 @@ export async function testGeminiConnection(apiKey: string): Promise<boolean> {
       },
     });
     
-    // Attempt a very simple generation
+    // Attempt a very simple generation using the robust gemini-2.5-flash model
     await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: "Hello, just testing the connection. Reply with 'OK'.",
     });
     return true;
@@ -62,7 +62,7 @@ async function generateContentClientSide(apiKey: string, params: {
     },
   });
 
-  const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
+  const modelsToTry = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"];
   let lastError: any = null;
 
   for (const modelName of modelsToTry) {
@@ -86,13 +86,23 @@ async function generateContentClientSide(apiKey: string, params: {
         return response;
       } catch (err: any) {
         lastError = err;
-        console.error(`[Client Gemini] Error on ${modelName}:`, err);
+        const errMsg = err?.message || "";
+        const errString = typeof err === "object" ? JSON.stringify(err) : String(err);
+        console.error(`[Client Gemini] Error on ${modelName} (Attempt ${attempt}): ${errMsg || errString}`);
         
         const isTransient = 
-          err.message?.includes("503") || 
-          err.message?.includes("UNAVAILABLE") || 
-          err.message?.includes("429") ||
-          err.message?.includes("RESOURCE_EXHAUSTED");
+          errMsg.includes("503") || 
+          errMsg.includes("UNAVAILABLE") || 
+          errMsg.includes("429") ||
+          errMsg.includes("RESOURCE_EXHAUSTED") ||
+          errString.includes("503") ||
+          errString.includes("UNAVAILABLE") ||
+          errString.includes("429") ||
+          errString.includes("RESOURCE_EXHAUSTED") ||
+          err?.status === 503 ||
+          err?.status === 429 ||
+          err?.statusCode === 503 ||
+          err?.statusCode === 429;
         
         if (isTransient && attempt < maxRetries) {
           await new Promise((resolve) => setTimeout(resolve, delay));

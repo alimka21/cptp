@@ -37,7 +37,7 @@ async function generateContentWithRetryAndFallback(params: {
   config: any;
   client: GoogleGenAI;
 }): Promise<any> {
-  const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
+  const modelsToTry = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"];
   let lastError: any = null;
 
   for (const modelName of modelsToTry) {
@@ -55,16 +55,24 @@ async function generateContentWithRetryAndFallback(params: {
         return response;
       } catch (err: any) {
         lastError = err;
-        console.error(`[Gemini API] Error on ${modelName} (Attempt ${attempt}): ${err.message || err}`);
+        const errMsg = err?.message || "";
+        const errString = typeof err === "object" ? JSON.stringify(err) : String(err);
+        console.error(`[Gemini API] Error on ${modelName} (Attempt ${attempt}): ${errMsg || errString}`);
         
         // If it's a 503, 429, or other transient/unavailable error, wait and retry
         const isTransient = 
-          err.message?.includes("503") || 
-          err.message?.includes("UNAVAILABLE") || 
-          err.status === 503 ||
-          err.message?.includes("429") ||
-          err.status === 429 ||
-          err.message?.includes("RESOURCE_EXHAUSTED");
+          errMsg.includes("503") || 
+          errMsg.includes("UNAVAILABLE") || 
+          errMsg.includes("429") ||
+          errMsg.includes("RESOURCE_EXHAUSTED") ||
+          errString.includes("503") ||
+          errString.includes("UNAVAILABLE") ||
+          errString.includes("429") ||
+          errString.includes("RESOURCE_EXHAUSTED") ||
+          err?.status === 503 ||
+          err?.status === 429 ||
+          err?.statusCode === 503 ||
+          err?.statusCode === 429;
         
         if (isTransient && attempt < maxRetries) {
           console.log(`[Gemini API] Transient error detected. Retrying in ${delay}ms...`);
