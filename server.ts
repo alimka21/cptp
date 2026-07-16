@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { errorHandler } from "./server/middlewares/errorHandler";
 import adminRouter from "./server/routes/adminRoutes";
 import curriculumRouter from "./server/routes/curriculumRoutes";
@@ -42,6 +41,7 @@ app.use(errorHandler);
 // Setup Vite development server & production static serving
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
