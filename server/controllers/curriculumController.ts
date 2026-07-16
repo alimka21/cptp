@@ -3,19 +3,31 @@ import * as fs from "fs";
 import * as path from "path";
 
 export function getBaseDir() {
-  const cwdPath = path.join(process.cwd(), "capaian_pembelajaran");
-  if (fs.existsSync(cwdPath)) {
-    return cwdPath;
+  const pathsToTry = [
+    path.join(process.cwd(), "capaian_pembelajaran"),
+    "/var/task/capaian_pembelajaran"
+  ];
+
+  try {
+    if (typeof __dirname !== "undefined" && __dirname) {
+      pathsToTry.push(
+        path.join(__dirname, "../capaian_pembelajaran"),
+        path.join(__dirname, "capaian_pembelajaran"),
+        path.join(__dirname, "../../capaian_pembelajaran"),
+        path.join(__dirname, "../../../capaian_pembelajaran")
+      );
+    }
+  } catch (e) {
+    // __dirname not defined in ESM
   }
-  const dirnamePath = path.join(__dirname, "../../capaian_pembelajaran");
-  if (fs.existsSync(dirnamePath)) {
-    return dirnamePath;
+
+  for (const p of pathsToTry) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
   }
-  const dirnameOnePath = path.join(__dirname, "../capaian_pembelajaran");
-  if (fs.existsSync(dirnameOnePath)) {
-    return dirnameOnePath;
-  }
-  return cwdPath;
+
+  return path.join(process.cwd(), "capaian_pembelajaran");
 }
 
 import { Type } from "@google/genai";
