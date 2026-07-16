@@ -19,6 +19,7 @@ import TopBar from "./components/TopBar";
 import DashboardView from "./components/DashboardView";
 import WorkspaceView from "./components/WorkspaceView";
 import SettingsView from "./components/SettingsView";
+import ProdukView from "./components/ProdukView";
 
 import { SesiKurikulumProvider, useSesiKurikulum } from "./context/SesiKurikulumContext";
 
@@ -32,7 +33,7 @@ export default function App() {
 
 function AppContent() {
   // 1. Core States & Interactive Navigation View Flow
-  const [activeView, setActiveView] = useState<"login" | "dashboard" | "identity" | "parameters" | "workspace" | "settings">("dashboard");
+  const [activeView, setActiveView] = useState<"login" | "dashboard" | "produk" | "identity" | "parameters" | "workspace" | "settings">("dashboard");
   const [activeTab, setActiveTab] = useState<"identitas" | "cp" | "tp" | "atp" | "prota" | "promes" | "kktp" | "alokasi">("identitas");
   
   // SesiKurikulum Context Hook
@@ -663,6 +664,10 @@ function AppContent() {
                 handleGenerateAllDocuments={handleGenerateAllDocuments}
                 tps={tps}
               />
+            )}
+
+            {activeView === "produk" && (
+              <ProdukView />
             )}
 
             {activeView === "workspace" && (
