@@ -1,10 +1,9 @@
-import app from "../server";
+// api/index.ts
+// Entry point untuk Vercel Serverless Function
+// PENTING: Gunakan ekstensi .js (bukan tanpa ekstensi)
+// karena package.json menggunakan "type": "module" (ES Modules)
+// Node.js ESM tidak mendukung directory import — harus eksplisit ke file-nya.
 
-process.on('uncaughtException', (err) => {
-  console.error("Uncaught Exception:", err);
-});
-process.on('unhandledRejection', (err) => {
-  console.error("Unhandled Rejection:", err);
-});
+import app from "../server.js";
 
 export default app;

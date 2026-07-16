@@ -21,6 +21,33 @@ app.use((req, res, next) => {
   next();
 });
 
+// Tambahkan setelah app.use("/api", statusRouter);
+app.post("/api/debug-docx", async (req, res) => {
+  try {
+    // Test 1: Apakah import berhasil?
+    const { generateDocx } = await import("./server/utils/docxUtils");
+    res.json({ step: 1, ok: true, msg: "Import docxUtils berhasil" });
+  } catch (err: any) {
+    res.status(500).json({ step: 1, ok: false, error: err.message, stack: err.stack });
+  }
+});
+
+app.post("/api/debug-docx-generate", async (req, res) => {
+  try {
+    const { generateDocx } = await import("./server/utils/docxUtils");
+    // Test 2: Apakah generate dengan data minimal bisa?
+    const buf = await generateDocx("cp", {
+      identity: { subject: "Test", phase: "D", schoolName: "Test School" },
+      tps: [],
+      babs: [],
+      elements: []
+    });
+    res.json({ step: 2, ok: true, size: buf.length });
+  } catch (err: any) {
+    res.status(500).json({ step: 2, ok: false, error: err.message, stack: err.stack });
+  }
+});
+
 // Setup body parsing
 app.use(express.json({ limit: "50mb" }));
 

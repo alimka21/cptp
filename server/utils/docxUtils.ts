@@ -1508,7 +1508,24 @@ export async function generateDocx(templateName: string, data: any): Promise<Buf
   // Enrich the raw data object with computed values, indices, and duplicates for safe templating 
   const enriched = enrichDataForDocxtemplater(data);
 
-  docx.render(enriched);
+  try {
+    docx.render(enriched);
+  } catch (renderError: any) {
+    console.error("================ DOCXTEMPLATER RENDER ERROR ================");
+    console.error("Error Message:", renderError.message);
+    if (renderError.properties && renderError.properties.errors) {
+      console.error("Detailed Errors:", JSON.stringify(renderError.properties.errors, null, 2));
+    } else if (renderError.properties) {
+      console.error("Properties:", JSON.stringify(renderError.properties, null, 2));
+    }
+    console.error("Enriched Data Payload Sample:", JSON.stringify({
+      identity: enriched.identity,
+      tpsCount: enriched.tps?.length,
+      babsCount: enriched.babs?.length
+    }, null, 2));
+    console.error("=========================================================");
+    throw new Error(`Template render gagal: ${renderError.message}`);
+  }
 
   const buf = docx.getZip().generate({
     type: "nodebuffer",
