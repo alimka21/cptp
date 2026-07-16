@@ -142,13 +142,24 @@ export async function analyzeCp(req: Request, res: Response, next: NextFunction)
  */
 export async function exportDocx(req: Request, res: Response, next: NextFunction) {
   try {
-    trackRequest("export");
+    console.log("[exportDocx] Request received");
+    console.log("[exportDocx] Body keys:", Object.keys(req.body || {}));
+    
     const { identity, tps, babs, elements, tab = "all" } = req.body;
+    console.log("[exportDocx] Params - tab:", tab);
+    console.log("[exportDocx] Params - identity exists:", !!identity);
+    console.log("[exportDocx] Params - tps count:", Array.isArray(tps) ? tps.length : "not an array");
+    console.log("[exportDocx] Params - babs count:", Array.isArray(babs) ? babs.length : "not an array");
+    console.log("[exportDocx] Params - elements count:", Array.isArray(elements) ? elements.length : "not an array");
 
     if (!identity) {
+      console.warn("[exportDocx] Validation failed: identity is missing");
       return res.status(400).json({ error: "Data identitas petaan guru wajib dicantumkan." });
     }
 
+    trackRequest("export");
+
+    console.log("[exportDocx] Calling generateDocx for tab:", tab);
     // Load templates and render fields dynamically using docxtemplater & pizzip
     const docBuffer = await generateDocx(tab, {
       identity,
@@ -157,6 +168,7 @@ export async function exportDocx(req: Request, res: Response, next: NextFunction
       elements,
       kktpOption: req.body.kktpOption,
     });
+    console.log("[exportDocx] generateDocx completed successfully, buffer size:", docBuffer.length);
 
     const subjectStr = identity.subject || "dokumen";
     const sanitizedFileName = `administrasi_${tab}_${subjectStr.replace(/\s+/g, "_")}_fase_${identity.phase || "A"}.docx`.toLowerCase();
@@ -165,6 +177,8 @@ export async function exportDocx(req: Request, res: Response, next: NextFunction
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(sanitizedFileName)}"`);
     res.end(docBuffer);
   } catch (error: any) {
+    console.error("[exportDocx] CRASH:", error.message);
+    console.error("[exportDocx] Stack:", error.stack);
     next(error);
   }
 }

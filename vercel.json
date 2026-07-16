@@ -1,19 +1,16 @@
 {
   "version": 2,
+  "buildCommand": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=api/index.js",
+  "outputDirectory": "dist",
   "functions": {
-    "api/server.ts": {
+    "api/index.js": {
       "maxDuration": 30
     }
-  },
-  "buildCommand": "NODE_ENV=production vite build",
-  "outputDirectory": "dist",
-  "env": {
-    "NODE_ENV": "production"
   },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/server.ts"
+      "destination": "/api/index.js"
     },
     {
       "source": "/((?!api/).*)",
