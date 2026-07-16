@@ -2,16 +2,18 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "includeFiles": "public/capaian_pembelajaran/**"
+      "maxDuration": 30
     }
   },
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "/api/index.ts"
     },
     {
-      "source": "/((?!api/|capaian_pembelajaran/|assets/).*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
