@@ -87,7 +87,12 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
+const isRunningOnVercel =
+  process.env.VERCEL === "1" ||
+  !!process.env.VERCEL_URL ||
+  !!process.env.VERCEL_REGION;
+
+if (!isRunningOnVercel) {
   startServer();
 }
 
