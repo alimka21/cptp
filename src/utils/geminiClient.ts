@@ -167,6 +167,8 @@ export async function generateTpsClientSide(
     const targetKS1 = calcK.jpPerWeek * weeksS1;
     const targetKS2 = calcK.jpPerWeek * weeksS2;
     const isKelipatan3 = (calcK.jpPerWeek === 3);
+    const minTps = Math.max(10, Math.ceil(targetKTotal / 6));
+    const maxTps = Math.max(16, Math.ceil(targetKTotal / 3));
     
     jpGuideline += `\n   * KELAS ${K} (Target JP Efektif Tahunan: ${targetKTotal} JP, S1: ${targetKS1} JP, S2: ${targetKS2} JP, JP Mingguan: ${calcK.jpPerWeek} JP):`;
     if (isKelipatan3) {
@@ -174,6 +176,7 @@ export async function generateTpsClientSide(
     } else {
       jpGuideline += `\n     - Gunakan alokasi JP per TP yang selaras dengan jpPerWeek = ${calcK.jpPerWeek} JP (misalnya: ${calcK.jpPerWeek} JP, ${calcK.jpPerWeek * 2} JP, atau ${calcK.jpPerWeek * 3} JP per TP untuk materi luas).`;
     }
+    jpGuideline += `\n     - JUMLAH TP MINIMAL: Anda WAJIB merumuskan minimal ${minTps} hingga ${maxTps} Tujuan Pembelajaran (TP) yang sangat detail, bervariasi, dan granular untuk Kelas ${K} ini. Jangan merumuskan terlalu sedikit (seperti hanya 5 atau 6 TP saja) karena itu salah dan tidak mencukupi target kurikulum.`;
     jpGuideline += `\n     - SANGAT PENTING & WAJIB DIPENUHI: Akumulasi total seluruh JP dari TP yang Anda rancang untuk Kelas ${K} haruslah berkisar antara 90% hingga 105% dari target tahunan (${targetKTotal} JP) yang tersebar seimbang (S1: sekitar ${targetKS1} JP, S2: sekitar ${targetKS2} JP). Jika total JP dari TP yang Anda hasilkan masih kurang dari target tersebut, Anda dianggap GAGAL. Solusinya, pecahlah materi CP menjadi lebih banyak TP yang sangat detail dan granular sehingga total akumulasi JP tahunan benar-benar menyentuh ${targetKTotal} JP secara utuh dan proporsional!`;
   });
 
@@ -186,7 +189,7 @@ Tugas Anda adalah merumuskan Tujuan Pembelajaran (TP) yang SANGAT DETAIL, GRANUL
 ATURAN UTAMA PENYUSUNAN DAN DISTRIBUSI TP (WAJIB DIPATUHI):
 
 1. PENGURAIAN CP SECARA GRANULAR (DEBUNDLING CP SECARA DETAIL):
-   - Jangan membuat TP yang terlalu umum atau mengulang keseluruhan teks elemen (misal: "Peserta didik mampu memahami Sistem Komputer"). Itu sangat tidak berguna bagi guru. Anda harus memecah setiap elemen CP menjadi minimal 5 - 8 TP yang sangat granular, fungsional, dan operasional.
+   - Jangan membuat TP yang terlalu umum atau mengulang keseluruhan teks elemen (misal: "Peserta didik mampu memahami Sistem Komputer"). Itu sangat tidak berguna bagi guru. Anda harus memecah setiap elemen CP menjadi minimal 5 - 8 TP yang sangat granular, fungsional, dan operasional. Setiap kelas HARUS memiliki sekurang-kurangnya 10-15 TP agar akumulasi Jam Pelajaran (JP) memenuhi target tahunan.
    - Analisis mendalam teks CP (cpText) dari tiap elemen masukan. Temukan setiap sub-topik, sub-konsep, keterampilan, atau sikap yang tertulis di dalam paragraf CP tersebut.
    - Contoh terbaik (Informatika Fase D) dari cara mendebundle paragraf CP menjadi TP granular yang benar-benar detail per kelas:
      * KELAS 7:
@@ -201,7 +204,7 @@ ATURAN UTAMA PENYUSUNAN DAN DISTRIBUSI TP (WAJIB DIPATUHI):
        - menerapkan berpikir komputasional dalam menyelesaikan persoalan yang mengandung himpunan data berstruktur sederhana dengan volume kecil
        - menuliskan sekumpulan instruksi dengan menggunakan sekumpulan kosakata terbatas atau simbol dalam format pseudocode
        - mendeskripsikan komponen, fungsi, dan cara kerja komputer
-       - Memahami konsep dan penerapan konektivitas jaringan lokal dan internet baik kabel maupun nirkabel
+       - Memahami konsep and penerapan konektivitas jaringan lokal dan internet baik kabel maupun nirkabel
        - Memahami dampak perundungan digital
        - Memahami pentingnya menjaga rekam jejak digital
      * KELAS 9:
@@ -216,13 +219,13 @@ ATURAN UTAMA PENYUSUNAN DAN DISTRIBUSI TP (WAJIB DIPATUHI):
 
    Gunakan logika pembagian di atas sebagai dasar berfikir metodologis dan pola pembagian kelas untuk semua mata pelajaran, jenjang, dan fase lainnya secara konsisten dan detail!
 
-2. GRADASI DAN DISTRIBUSI KELAS LOGIS (LEARNING PROGRESSION):
+2. GRADASI DAN DISTRIBUSI KELAS & SEMESTER LOGIS (LEARNING PROGRESSION):
    - Fase ${phase} mencakup kelas-kelas: ${kelasList.join(", ")}.
    - Distribusikan TP secara bergradasi kognitif dan urutan materi logis dari kelas pertama ke kelas akhir:
      * KELAS AWAL dalam Fase: Berfokus pada fondasi, pemahaman konsep dasar, literasi awal, pembedaan fakta dasar, pengenalan antarmuka/alat dasar, dan navigasi sederhana.
      * KELAS TENGAH dalam Fase: Berfokus pada penerapan tingkat menengah (apply), analisis kerja komponen fisik/sistem, deskripsi fungsionalitas, penulisan instruksi prosedural/simbol/pseudocode, serta kolaborasi kelompok sedang.
      * KELAS AKHIR dalam Fase: Berfokus pada pemecahan masalah kompleks, kreasi/produksi karya mandiri, diseminasi konten, perlindungan data pribadi dan keamanan siber (keamanan sandi, malware), pencegahan risiko digital lanjut, memilah informasi privat vs publik, serta kesadaran mental penuh (mindfulness digital) dan etika sosial tingkat lanjut.
-   - Seluruh kelas (${kelasList.join(", ")}) harus mendapatkan alokasi rumusan TP yang relevan secara merata dan logis, tidak boleh menumpuk di satu kelas saja.
+   - PEMBAGIAN SEMESTER: Anda harus mendistribusikan TP secara merata ke Semester 1 dan Semester 2 untuk setiap kelas. Setiap TP harus diberi label semester (1 atau 2) secara logis sehingga materi di Semester 1 menjadi prasyarat logis untuk Semester 2, dan beban JP Semester 1 dan Semester 2 seimbang mendekati target mingguan dikali minggu efektif semester masing-masing.
 
 3. STRUKTUR FORMAT KALIMAT TP (LANGSUNG DIAWALI KKO):
    - Setiap rumusan TP bagian "text" harus langsung diawali oleh Kata Kerja Operasional (KKO) aktif yang tertulis dalam huruf kecil (tidak diawali 'Peserta didik mampu' atau kata pembuka generik), agar praktis dan presisi.
@@ -289,12 +292,16 @@ Harap rumuskan Tujuan Pembelajaran (TP) yang terperinci secara profesional berda
           type: "INTEGER",
           description: schemaJpDescription,
         },
+        semester: {
+          type: "INTEGER",
+          description: "Semester tujuan TP ini. HARUS bernilai 1 untuk Semester 1 atau 2 untuk Semester 2.",
+        },
         materiPokok: {
           type: "STRING",
           description: "Materi pokok / topik utama.",
         },
       },
-      required: ["element", "kelas", "competency", "content", "text", "code", "jp", "materiPokok"],
+      required: ["element", "kelas", "semester", "competency", "content", "text", "code", "jp", "materiPokok"],
     },
   };
 

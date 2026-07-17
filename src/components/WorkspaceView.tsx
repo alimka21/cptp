@@ -141,7 +141,7 @@ export default function WorkspaceView({
   const currentStepIndex = stepsList.findIndex((s) => s.id === activeTab);
   const isDocumentsGenerated = tps.length > 0;
 
-  const handleAddTp = (grade: string) => {
+  const handleAddTp = (grade: string, semester: number = 1) => {
     const mapelAbbr = identity.subject ? identity.subject.substring(0, 3).toUpperCase() : "MAPEL";
     const gradeTps = tps.filter(t => (t.grade || identity.grades[0]) === grade);
     const nextNum = gradeTps.length + 1;
@@ -156,7 +156,7 @@ export default function WorkspaceView({
       content: "Materi Baru",
       text: "Mendeskripsikan dan menjelaskan konsep baru...",
       grade: grade,
-      semester: 1,
+      semester: semester,
       jp: 4,
       materiPokok: "Materi Baru",
     };
@@ -496,7 +496,7 @@ export default function WorkspaceView({
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          {isDocumentsGenerated && (
+          {isDocumentsGenerated && activeTab === "alokasi" && (
             <button
               onClick={() => handleDownloadDocx("all")}
               disabled={!validation.statusValid}
@@ -994,13 +994,6 @@ export default function WorkspaceView({
                 </h4>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest block mt-0.5 font-mono">Keputusan KEPALA BSKAP KEMENTERIAN PENDIDIKAN DASAR DAN MENENGAH NOMOR 046/H/KR/2025</span>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("cp")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh CP .docx</span>
-              </button>
             </div>
 
             <div className="overflow-hidden border border-[#e2e8f0] rounded-2xl bg-white shadow-2xs">
@@ -1047,181 +1040,182 @@ export default function WorkspaceView({
                   <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
                   <span>Optimasi Ulang via AI</span>
                 </button>
-                <button
-                  onClick={() => handleDownloadDocx("tp")}
-                  className="text-xs font-bold text-blue-600 bg-blue-50/40 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Unduh TP .docx</span>
-                </button>
               </div>
             </div>
 
             <div className="space-y-6">
               {activeGrades.map((grade) => {
-                const filteredTps = tps.filter(obj => (obj.grade || identity.grades[0]) === grade);
+                const gradeTps = tps.filter(obj => (obj.grade || identity.grades[0]) === grade);
+                const s1Tps = gradeTps.filter(obj => obj.semester === 1);
+                const s2Tps = gradeTps.filter(obj => obj.semester === 2);
+
+                const renderSemesterTable = (semTps: LearningObjective[], semesterNum: number) => {
+                  const title = semesterNum === 1 ? "Semester I (Ganjil)" : "Semester II (Genap)";
+                  const badgeColor = semesterNum === 1 ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-indigo-50 text-indigo-800 border-indigo-200";
+
+                  return (
+                    <div className="space-y-3 bg-white border border-slate-100 rounded-2xl p-4 shadow-3xs">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md border ${badgeColor}`}>
+                          {title} — {semTps.length} TP
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleAddTp(grade, semesterNum)}
+                          className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1 active:scale-95 shadow-3xs cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Tambah TP {semesterNum === 1 ? "S1" : "S2"}</span>
+                        </button>
+                      </div>
+
+                      <div className="overflow-x-auto border border-[#e2e8f0] rounded-xl bg-white shadow-3xs">
+                        <table className="w-full text-left border-collapse text-xs min-w-[700px]">
+                          <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
+                            <tr>
+                              <th className="px-4 py-3 text-center w-28">Kode</th>
+                              <th className="px-4 py-3 w-48">Elemen CP</th>
+                              {identity.grades.length > 1 && (
+                                <th className="px-4 py-3 w-32">Kelas</th>
+                              )}
+                              <th className="px-4 py-3 text-center w-36">Alokasi JP</th>
+                              <th className="px-4 py-3 text-center w-20">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-700">
+                            {semTps.map((obj) => (
+                              <React.Fragment key={obj.id}>
+                                {/* Row 1: Metadata */}
+                                <tr className="align-middle bg-slate-50/25">
+                                  <td className="px-4 py-2 text-center w-28">
+                                    <input
+                                      type="text"
+                                      className="w-full bg-[#FAFBFD] border border-slate-205 px-2 py-1.5 text-xs text-blue-700 font-mono font-bold focus:outline-none focus:border-blue-605 rounded-lg text-center"
+                                      value={obj.code}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setTps(prev => prev.map(t => t.id === obj.id ? { ...t, code: val } : t));
+                                      }}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-2 w-48">
+                                    <select
+                                      value={obj.element}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setTps(prev => prev.map(t => t.id === obj.id ? { ...t, element: val } : t));
+                                      }}
+                                      className="w-full bg-white border border-slate-205 px-2 py-1.5 text-xs text-slate-800 rounded-lg outline-none font-medium"
+                                    >
+                                      {elements.map(el => (
+                                        <option key={el.name} value={el.name}>{el.name}</option>
+                                      ))}
+                                      {elements.length === 0 && (
+                                        <option value={obj.element}>{obj.element}</option>
+                                      )}
+                                    </select>
+                                  </td>
+                                  {identity.grades.length > 1 && (
+                                    <td className="px-4 py-2 w-32">
+                                      <select
+                                        value={obj.grade || grade}
+                                        onChange={(e) => {
+                                          const nextGrad = e.target.value;
+                                          setTps(prev => prev.map(t => t.id === obj.id ? { ...t, grade: nextGrad } : t));
+                                        }}
+                                        className="px-2 py-1.5 bg-white border border-slate-200 text-xs text-slate-705 font-bold rounded-lg outline-none w-full"
+                                      >
+                                        {identity.grades.map(g => (
+                                          <option key={g} value={g}>Kelas {g}</option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                  )}
+                                  <td className="px-4 py-2 text-center w-36">
+                                    <div className="flex items-center justify-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5 w-fit mx-auto shadow-3xs">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateTpJp(obj.id, obj.jp - 1)}
+                                        className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/60 active:scale-95"
+                                      >
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <input
+                                        type="number"
+                                        className="w-10 text-center bg-white border border-slate-200/60 rounded px-1 py-0.5 font-bold text-xs"
+                                        value={obj.jp}
+                                        onChange={(e) => handleUpdateTpJp(obj.id, parseInt(e.target.value) || 0)}
+                                      />
+                                      <span className="text-[10px] text-slate-400 font-bold px-0.5">JP</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateTpJp(obj.id, obj.jp + 1)}
+                                        className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/60 active:scale-95"
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-2 text-center w-20">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteTp(obj.id)}
+                                      className="p-1.5 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100/80 rounded-lg border border-red-100 transition active:scale-95 shadow-3xs"
+                                      title="Hapus TP"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                                {/* Row 2: Kalimat Rumusan Tujuan Pembelajaran (TP) */}
+                                <tr className="border-b border-slate-200/80 bg-white">
+                                  <td colSpan={identity.grades.length > 1 ? 5 : 4} className="px-4 pb-3.5 pt-1.5">
+                                    <div className="flex flex-col gap-1.5 w-full bg-[#FAFBFD] p-2.5 rounded-xl border border-slate-100 shadow-3xs">
+                                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
+                                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                                        Kalimat Rumusan Tujuan Pembelajaran (TP)
+                                      </div>
+                                      <textarea
+                                        rows={2}
+                                        className="w-full bg-white border border-slate-200/80 px-3 py-2 text-xs text-slate-800 font-medium leading-relaxed focus:outline-none focus:border-blue-500 rounded-lg shadow-3xs focus:ring-1 focus:ring-blue-100 resize-none"
+                                        value={obj.text}
+                                        onChange={(e) => handleUpdateTpText(obj.id, e.target.value)}
+                                        placeholder="Tuliskan rumusan tujuan pembelajaran operasional di sini..."
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              </React.Fragment>
+                            ))}
+                            {semTps.length === 0 && (
+                              <tr>
+                                <td colSpan={identity.grades.length > 1 ? 5 : 4} className="px-4 py-6 text-center text-slate-400 italic">
+                                  Belum ada TP yang didelegasikan ke semester ini.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                };
 
                 return (
-                  <div key={grade} className="space-y-4 border border-slate-100 rounded-2xl p-4 bg-[#F8FAFC]/55">
+                  <div key={grade} className="space-y-4 border border-slate-100 rounded-2xl p-5 bg-[#F8FAFC]/55">
                     <div className="flex items-center justify-between bg-white border border-[#E2E8F0] px-4 py-2 rounded-xl shadow-3xs">
                       <div className="flex items-center gap-2">
                         <GraduationCap className="w-4 h-4 text-blue-605" />
                         <span className="text-xs font-black text-slate-800">Tujuan Pembelajaran Kelas {grade}</span>
                         <span className="text-[10px] bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 font-bold border border-blue-100">
-                          {filteredTps.length} TP
+                          {gradeTps.length} TP Total
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddTp(grade)}
-                        className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1 active:scale-95 shadow-3xs"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Tambah TP</span>
-                      </button>
                     </div>
 
-                    <div className="overflow-x-auto border border-[#e2e8f0] rounded-2xl bg-white shadow-3xs">
-                      <table className="w-full text-left border-collapse text-xs min-w-[800px]">
-                        <thead className="bg-[#FAFBFD] font-bold text-slate-500 border-b border-[#e2e8f0]">
-                          <tr>
-                            <th className="px-4 py-3 text-center w-28">Kode</th>
-                            <th className="px-4 py-3 w-48">Elemen CP</th>
-                            <th className="px-4 py-3 w-28 text-center">Semester</th>
-                            {identity.grades.length > 1 && (
-                              <th className="px-4 py-3 w-32">Kelas</th>
-                            )}
-                            <th className="px-4 py-3 text-center w-36">Alokasi JP</th>
-                            <th className="px-4 py-3 text-center w-20">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-700">
-                          {filteredTps.map((obj) => (
-                            <React.Fragment key={obj.id}>
-                              {/* Row 1: Metadata */}
-                              <tr className="align-middle bg-slate-50/25">
-                                <td className="px-4 py-2 text-center w-28">
-                                  <input
-                                    type="text"
-                                    className="w-full bg-[#FAFBFD] border border-slate-205 px-2 py-1.5 text-xs text-blue-700 font-mono font-bold focus:outline-none focus:border-blue-605 rounded-lg text-center"
-                                    value={obj.code}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      setTps(prev => prev.map(t => t.id === obj.id ? { ...t, code: val } : t));
-                                    }}
-                                  />
-                                </td>
-                                <td className="px-4 py-2 w-48">
-                                  <select
-                                    value={obj.element}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      setTps(prev => prev.map(t => t.id === obj.id ? { ...t, element: val } : t));
-                                    }}
-                                    className="w-full bg-white border border-slate-205 px-2 py-1.5 text-xs text-slate-800 rounded-lg outline-none font-medium"
-                                  >
-                                    {elements.map(el => (
-                                      <option key={el.name} value={el.name}>{el.name}</option>
-                                    ))}
-                                    {elements.length === 0 && (
-                                      <option value={obj.element}>{obj.element}</option>
-                                    )}
-                                  </select>
-                                </td>
-                                <td className="px-4 py-2 text-center w-28">
-                                  <select
-                                    value={obj.semester || 1}
-                                    onChange={(e) => {
-                                      const val = parseInt(e.target.value) || 1;
-                                      setTps(prev => prev.map(t => t.id === obj.id ? { ...t, semester: val } : t));
-                                    }}
-                                    className="bg-white border border-slate-205 px-2 py-1.5 text-xs text-slate-800 rounded-lg outline-none font-medium mx-auto"
-                                  >
-                                    <option value={1}>Smtr 1</option>
-                                    <option value={2}>Smtr 2</option>
-                                  </select>
-                                </td>
-                                {identity.grades.length > 1 && (
-                                  <td className="px-4 py-2 w-32">
-                                    <select
-                                      value={obj.grade || grade}
-                                      onChange={(e) => {
-                                        const nextGrad = e.target.value;
-                                        setTps(prev => prev.map(t => t.id === obj.id ? { ...t, grade: nextGrad } : t));
-                                      }}
-                                      className="px-2 py-1.5 bg-white border border-slate-200 text-xs text-slate-705 font-bold rounded-lg outline-none w-full"
-                                    >
-                                      {identity.grades.map(g => (
-                                        <option key={g} value={g}>Kelas {g}</option>
-                                      ))}
-                                    </select>
-                                  </td>
-                                )}
-                                <td className="px-4 py-2 text-center w-36">
-                                  <div className="flex items-center justify-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5 w-fit mx-auto shadow-3xs">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleUpdateTpJp(obj.id, obj.jp - 1)}
-                                      className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/60 active:scale-95"
-                                    >
-                                      <Minus className="w-3 h-3" />
-                                    </button>
-                                    <input
-                                      type="number"
-                                      className="w-10 text-center bg-white border border-slate-200/60 rounded px-1 py-0.5 font-bold text-xs"
-                                      value={obj.jp}
-                                      onChange={(e) => handleUpdateTpJp(obj.id, parseInt(e.target.value) || 0)}
-                                    />
-                                    <span className="text-[10px] text-slate-400 font-bold px-0.5">JP</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleUpdateTpJp(obj.id, obj.jp + 1)}
-                                      className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/60 active:scale-95"
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2 text-center w-20">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteTp(obj.id)}
-                                    className="p-1.5 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100/80 rounded-lg border border-red-100 transition active:scale-95 shadow-3xs"
-                                    title="Hapus TP"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </td>
-                              </tr>
-                              {/* Row 2: Kalimat Rumusan Tujuan Pembelajaran (TP) */}
-                              <tr className="border-b border-slate-200/80 bg-white">
-                                <td colSpan={identity.grades.length > 1 ? 6 : 5} className="px-4 pb-3.5 pt-1.5">
-                                  <div className="flex flex-col gap-1.5 w-full bg-[#FAFBFD] p-2.5 rounded-xl border border-slate-100 shadow-3xs">
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
-                                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                                      Kalimat Rumusan Tujuan Pembelajaran (TP)
-                                    </div>
-                                    <textarea
-                                      rows={2}
-                                      className="w-full bg-white border border-slate-200/80 px-3 py-2 text-xs text-slate-800 font-medium leading-relaxed focus:outline-none focus:border-blue-500 rounded-lg shadow-3xs focus:ring-1 focus:ring-blue-100 resize-none"
-                                      value={obj.text}
-                                      onChange={(e) => handleUpdateTpText(obj.id, e.target.value)}
-                                      placeholder="Tuliskan rumusan tujuan pembelajaran operasional di sini..."
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            </React.Fragment>
-                          ))}
-                          {filteredTps.length === 0 && (
-                            <tr>
-                              <td colSpan={identity.grades.length > 1 ? 6 : 5} className="px-4 py-6 text-center text-slate-400">
-                                Belum ada TP yang didelegasikan ke Kelas {grade}. Silakan tambah baru atau jalankan ulang "Generate".
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                    <div className="grid grid-cols-1 gap-6">
+                      {renderSemesterTable(s1Tps, 1)}
+                      {renderSemesterTable(s2Tps, 2)}
                     </div>
                   </div>
                 );
@@ -1243,13 +1237,6 @@ export default function WorkspaceView({
                 </h4>
                 <p className="text-xs text-[#94a3b8] mt-0.5">Atur urutan progres mengajar per semester untuk tiap kelas secara logis dan runtut</p>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("atp")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh ATP .docx</span>
-              </button>
             </div>
 
             <div className="space-y-6">
@@ -1381,13 +1368,6 @@ export default function WorkspaceView({
                 </h4>
                 <span className="text-[10px] text-slate-400 block mt-0.5">Pemandu akumulasi sasaran JP dan materi pembelajaran setahun</span>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("prota")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh Prota .docx</span>
-              </button>
             </div>
 
             <div className="space-y-6">
@@ -1497,13 +1477,6 @@ export default function WorkspaceView({
                 </h4>
                 <p className="text-xs text-slate-400 mt-0.5">Plot program tatap muka dan evaluasi per minggu efektif (M1 - M4)</p>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("promes")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh Promes .docx</span>
-              </button>
             </div>
 
             <div className="space-y-6">
@@ -1693,14 +1666,6 @@ export default function WorkspaceView({
                     : "Menyusun kriteria berdasarkan skala interval nilai persentase hasil asesmen"}
                 </p>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("kktp", { kktpOption })}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3.5 py-2 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-                id="kktp-download-btn"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh KKTP .docx</span>
-              </button>
             </div>
 
             {/* Segmented Control Selector for KKTP Option A / B / C */}
@@ -1896,13 +1861,6 @@ export default function WorkspaceView({
                 </h4>
                 <p className="text-xs text-slate-400 mt-0.5">Analisis visual penyebaran kuantitatif jam mengajar intra-kurikuler tiap bab materi</p>
               </div>
-              <button
-                onClick={() => handleDownloadDocx("alokasi")}
-                className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl hover:bg-blue-100/60 transition flex items-center gap-1"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Unduh Alokasi .docx</span>
-              </button>
             </div>            {/* Regulatory Time Allocation Analysis Dashboard */}
             <div className="p-5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-4 animate-fade-in" id="jp-alokasi-analysis-dashboard">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">

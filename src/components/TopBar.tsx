@@ -27,7 +27,7 @@ export default function TopBar({
 
       <div className="flex items-center gap-4">
         {/* Context-aware CTA Actions (shown inside workspace and when all sessions are complete) */}
-        {activeView === "workspace" && isDocumentsGenerated && (
+        {activeView === "workspace" && isDocumentsGenerated && activeTab === "alokasi" && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleDownloadDocx(activeTab)}

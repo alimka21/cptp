@@ -541,7 +541,7 @@ function AppContent() {
             content: obj.content,
             text: obj.text,
             grade: tpKelas,
-            semester: (idx % 2 === 0) ? 1 : 2,
+            semester: Number(obj.semester) || ((idx % 2 === 0) ? 1 : 2),
             jp: validJp,
             materiPokok: obj.materiPokok || obj.content
           };
